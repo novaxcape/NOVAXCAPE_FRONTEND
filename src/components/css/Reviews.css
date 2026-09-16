@@ -3,7 +3,7 @@
   padding: 24px;
   border-radius: 12px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #fdf9f5;
+  /* background-color: #fdf9f5; */
   animation: fadeSlideUp 0.6s ease both;
 }
 

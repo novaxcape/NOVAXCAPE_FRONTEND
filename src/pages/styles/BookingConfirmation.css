@@ -1,0 +1,208 @@
+/* --- Variables & Global Styles --- */
+:root {
+  --confirm-primary-orange: #f05a28;
+  --confirm-primary-orange-hover: #d94e20;
+  --confirm-text-dark: #1f2937;
+  --confirm-text-light: #6b7280;
+  --confirm-border-color: #e5e7eb;
+  --confirm-bg-light-blue: #eff6ff;
+  --confirm-bg-light-orange: #fff7ed;
+  --confirm-code-bg: #f3f4f6;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f9fafb; /* Light gray background for the page */
+  color: var(--confirm-text-dark);
+}
+
+/* --- Page Layout --- */
+.confirm-page-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.confirm-card {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 460px;
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  border: 1px solid var(--confirm-border-color);
+}
+
+/* --- Header Section --- */
+.confirm-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.confirm-icon-circle {
+  width: 64px;
+  height: 64px;
+  background-color: #dcfce7;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px auto;
+}
+
+.confirm-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+.confirm-header p {
+  font-size: 13px;
+  color: var(--confirm-text-light);
+}
+
+/* --- Email Banner --- */
+.confirm-email-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: var(--confirm-bg-light-blue);
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 32px;
+}
+
+.confirm-email-banner span {
+  font-size: 13px;
+  color: #1e3a8a;
+  font-weight: 500;
+}
+
+/* --- Booking Details --- */
+.confirm-details-section {
+  margin-bottom: 32px;
+}
+
+.confirm-details-section h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #111827;
+}
+
+.confirm-detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.confirm-detail-icon {
+  color: #3b82f6; /* Blue tint for icons */
+  margin-top: 2px;
+}
+
+.confirm-detail-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.confirm-label {
+  font-size: 11px;
+  color: var(--confirm-text-light);
+}
+
+.confirm-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* --- Passcode Box --- */
+.confirm-passcode-box {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.confirm-passcode-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--confirm-text-dark);
+  margin-bottom: 4px;
+}
+
+.confirm-passcode-sub {
+  font-size: 11px;
+  color: var(--confirm-text-light);
+  margin-bottom: 20px;
+}
+
+.confirm-code-display {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 8px;
+  color: #111827;
+  background-color: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.confirm-download-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid var(--confirm-border-color);
+  color: var(--confirm-text-dark);
+  padding: 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.confirm-download-btn:hover {
+  background-color: #f9fafb;
+}
+
+/* --- Bottom Button --- */
+.confirm-home-btn {
+  width: 100%;
+  background-color: var(--confirm-primary-orange);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.confirm-home-btn:hover {
+  background-color: var(--confirm-primary-orange-hover);
+}

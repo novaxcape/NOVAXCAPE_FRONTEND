@@ -1,0 +1,431 @@
+/* --- Variables --- */
+:root {
+  --ps-navy: #1e2a54;
+  --ps-navy-hover: #16204a;
+  --ps-orange: #f05a28;
+  --ps-orange-hover: #d94e20;
+  --ps-text-dark: #111827;
+  --ps-text-light: #6b7280;
+  --ps-border-color: #e5e7eb;
+  --ps-danger: #e0512f;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.ps-page-wrapper {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--ps-text-dark);
+  width: 100%;
+  max-width: 900px;
+  padding: 40px;
+}
+
+/* --- Animations --- */
+@keyframes ps-fade-in-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ps-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ps-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes ps-pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(240, 90, 40, 0.35); }
+  50% { box-shadow: 0 0 0 7px rgba(240, 90, 40, 0); }
+}
+
+@keyframes ps-avatar-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(30, 42, 84, 0.18); }
+  50% { box-shadow: 0 0 0 6px rgba(30, 42, 84, 0); }
+}
+
+@keyframes ps-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+/* --- Header --- */
+.ps-header {
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: ps-fade-in-up 0.5s ease-out 0.05s forwards;
+}
+
+.ps-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.ps-header p {
+  font-size: 13px;
+  color: var(--ps-text-light);
+  margin-top: 4px;
+}
+
+/* --- Profile / Avatar Section --- */
+.ps-profile-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 32px;
+  opacity: 0;
+  animation: ps-fade-in-up 0.5s ease-out 0.15s forwards;
+}
+
+.ps-avatar-wrap {
+  border-radius: 50%;
+  animation: ps-avatar-ring 2.6s ease-in-out infinite;
+}
+
+.ps-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.ps-avatar-wrap:hover .ps-avatar {
+  transform: scale(1.06);
+}
+
+.ps-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ps-profile-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ps-profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ps-file-input {
+  display: none;
+}
+
+.ps-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--ps-navy);
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.ps-upload-btn:hover {
+  background-color: var(--ps-navy-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(30, 42, 84, 0.25);
+}
+
+.ps-upload-btn:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.ps-upload-btn svg {
+  animation: none;
+  transition: transform 0.2s ease;
+}
+
+.ps-upload-btn:hover svg {
+  transform: translateY(-2px);
+}
+
+.ps-remove-btn {
+  background-color: transparent;
+  color: var(--ps-navy);
+  border: 1px solid var(--ps-border-color);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.15s ease, background-color 0.2s ease;
+}
+
+.ps-remove-btn:hover {
+  border-color: var(--ps-navy);
+  background-color: #f4f5f9;
+  animation: ps-shake 0.35s ease;
+}
+
+.ps-profile-hint {
+  font-size: 11px;
+  color: var(--ps-text-light);
+}
+
+/* --- Tabs --- */
+.ps-tabs {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background-color: #f3f4f6;
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 32px;
+  opacity: 0;
+  animation: ps-fade-in-up 0.5s ease-out 0.22s forwards;
+}
+
+.ps-tabs-indicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  background-color: var(--ps-navy);
+  border-radius: 999px;
+  transition: transform 0.3s cubic-bezier(0.65, 0, 0.35, 1);
+  z-index: 0;
+}
+
+.ps-tabs-indicator--right {
+  transform: translateX(100%);
+}
+
+.ps-tab {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  border: none;
+  padding: 10px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ps-text-light);
+  cursor: pointer;
+  border-radius: 999px;
+  transition: color 0.25s ease;
+}
+
+.ps-tab--active {
+  color: #ffffff;
+}
+
+/* --- Form --- */
+.ps-form {
+  opacity: 0;
+  animation: ps-fade-in 0.4s ease-out 0.3s forwards;
+}
+
+.ps-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 24px;
+  margin-bottom: 28px;
+}
+
+.ps-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  opacity: 0;
+  animation: ps-fade-in-up 0.4s ease-out forwards;
+  animation-delay: var(--ps-delay, 0s);
+}
+
+.ps-field label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ps-field input,
+.ps-select-wrap select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--ps-border-color);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--ps-text-dark);
+  outline: none;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ps-field input::placeholder {
+  color: #9ca3af;
+}
+
+.ps-field input:focus,
+.ps-select-wrap select:focus {
+  border-color: var(--ps-navy);
+  box-shadow: 0 0 0 3px rgba(30, 42, 84, 0.1);
+}
+
+.ps-select-wrap {
+  position: relative;
+}
+
+.ps-select-wrap select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.ps-select-chevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ps-text-light);
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+.ps-select-wrap select:focus ~ .ps-select-chevron {
+  color: var(--ps-navy);
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* --- Actions --- */
+.ps-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ps-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--ps-orange);
+  color: #ffffff;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+  animation: ps-pulse-glow 2.6s ease-in-out infinite;
+}
+
+.ps-save-btn:hover {
+  background-color: var(--ps-orange-hover);
+  transform: translateY(-1px);
+}
+
+.ps-save-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.ps-save-btn--saved {
+  background-color: #16a34a;
+  animation: ps-pop 0.3s ease;
+}
+
+.ps-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #fff5f2;
+  color: var(--ps-danger);
+  border: 1px solid #f7cdbf;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.ps-delete-btn:hover {
+  background-color: #ffe7e0;
+  box-shadow: 0 4px 12px rgba(224, 81, 47, 0.18);
+  animation: ps-shake 0.35s ease;
+}
+
+.ps-delete-btn:active {
+  transform: scale(0.97);
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .ps-header,
+  .ps-profile-section,
+  .ps-tabs,
+  .ps-form,
+  .ps-field,
+  .ps-avatar-wrap,
+  .ps-save-btn,
+  .ps-save-btn--saved,
+  .ps-remove-btn,
+  .ps-delete-btn {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  .ps-avatar,
+  .ps-upload-btn,
+  .ps-remove-btn,
+  .ps-tabs-indicator,
+  .ps-select-chevron,
+  .ps-field input,
+  .ps-select-wrap select,
+  .ps-save-btn,
+  .ps-delete-btn {
+    transition: none !important;
+  }
+}
+
+/* --- Responsive --- */
+@media (max-width: 720px) {
+  .ps-page-wrapper {
+    padding: 24px 18px;
+  }
+
+  .ps-form-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .ps-profile-section {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 420px) {
+  .ps-header h1 {
+    font-size: 20px;
+  }
+
+  .ps-profile-actions {
+    flex-wrap: wrap;
+  }
+
+  .ps-actions {
+    flex-direction: column;
+  }
+
+  .ps-save-btn,
+  .ps-delete-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

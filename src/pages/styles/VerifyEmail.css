@@ -1,0 +1,207 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
+
+.verify-email-page {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #faf9f5;
+  font-family: "Manrope", sans-serif;
+}
+
+.verify-email-image-section {
+  position: relative;
+  flex: 1;
+  margin: 16px;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.verify-email-hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.verify-email-image-overlay {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding: 32px;
+  color: #ffffff;
+}
+
+.verify-email-image-heading {
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+  font-size: 40px;
+  line-height: 55px;
+  letter-spacing: 0%;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+}
+
+.verify-email-image-text {
+  font-family: "Manrope", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 30px;
+  letter-spacing: 0%;
+  color: #ffffff;
+  max-width: 420px;
+  margin: 0;
+  word-break: break-word;
+}
+
+.verify-email-form-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 16px 64px;
+  overflow-y: auto;
+}
+
+.verify-email-form-heading {
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+  font-size: 40px;
+  line-height: 55px;
+  letter-spacing: 0%;
+  text-align: center;
+  color: #271a13;
+  margin: 0 0 24px 0;
+}
+
+.verify-email-server-error {
+  background-color: #fdecea;
+  color: #b3261e;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  margin: 0 0 12px 0;
+  text-align: center;
+}
+
+.verify-email-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.verify-email-otp-row {
+  display: flex;
+  gap: 12px;
+}
+
+.verify-email-otp-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  border: 1px solid #e4e0d8;
+  background-color: #ffffff;
+  text-align: center;
+  font-family: "Manrope", sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #271a13;
+  box-sizing: border-box;
+}
+
+.verify-email-otp-box:focus {
+  outline: 2px solid #ff6b35;
+  outline-offset: 1px;
+}
+
+.verify-email-otp-box:disabled {
+  background-color: #f2f0ec;
+  cursor: not-allowed;
+}
+
+.verify-email-otp-box[aria-invalid="true"] {
+  border-color: #b3261e;
+}
+
+.verify-email-error-text {
+  font-family: "Manrope", sans-serif;
+  font-size: 13px;
+  color: #b3261e;
+}
+
+.verify-email-resend-text {
+  font-family: "Manrope", sans-serif;
+  font-size: 15px;
+  color: #271a13;
+  margin: 0;
+}
+
+.verify-email-resend-timer {
+  color: #2f6fed;
+  font-weight: 600;
+}
+
+.verify-email-resend-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: "Manrope", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2f6fed;
+  cursor: pointer;
+}
+
+.verify-email-resend-link:hover {
+  text-decoration: underline;
+}
+
+.verify-email-submit-button {
+  width: 100%;
+  height: 52px;
+  border-radius: 999px;
+  border: none;
+  background-color: #ff6b35;
+  color: #ffffff;
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: 0%;
+  text-align: center;
+  cursor: pointer;
+}
+
+.verify-email-submit-button:hover:not(:disabled) {
+  background-color: #e85a26;
+}
+
+.verify-email-submit-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .verify-email-page {
+    height: auto;
+    overflow: visible;
+    flex-direction: column;
+  }
+
+  .verify-email-image-section {
+    min-height: 280px;
+  }
+
+  .verify-email-form-section {
+    padding: 24px 24px;
+    overflow-y: visible;
+  }
+}
+
+@media (max-width: 420px) {
+  .verify-email-otp-box {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+}

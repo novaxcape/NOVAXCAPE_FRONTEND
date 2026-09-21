@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./css/ForgotPassword.css";
+import "./styles/ForgotPassword.css";
 
 function ForgotPassword({
   onSubmit = () => {},

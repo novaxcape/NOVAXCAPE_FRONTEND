@@ -1,0 +1,218 @@
+.signin-screen {
+  --color-primary-900: #1a0800;
+  --color-muted: #938d89;
+  --color-page-bg: #fbfaf8;
+  --color-card-bg: #ffffff;
+
+  --color-blue-start: #0b5fae;
+  --color-blue-end: #003e8a;
+  --color-blue-text: #0b4a9b;
+
+  --color-orange-text: #ff6b35;
+  --gradient-orange: linear-gradient(
+    135deg,
+    #ff6b35 0%,
+    #fd6e3a 25%,
+    #fa703f 50%,
+    #f87344 75%,
+    #f57548 100%
+  );
+  --gradient-blue: linear-gradient(
+    135deg,
+    var(--color-blue-start) 0%,
+    var(--color-blue-end) 100%
+  );
+
+  --card-width: 436px;
+  --card-gap: 96px;
+
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--color-page-bg);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  color: var(--color-primary-900);
+}
+
+.signin-screen *,
+.signin-screen *::before,
+.signin-screen *::after {
+  box-sizing: border-box;
+}
+
+.signin-screen__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.signin-screen__brand {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.signin-screen__logo {
+  display: block;
+  height: 28px;
+  width: auto;
+}
+
+.signin-screen__brand-name {
+  display: inline-block;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 28px;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+
+.signin-screen__brand-nova {
+  color: var(--color-orange-text);
+}
+
+.signin-screen__brand-xcape {
+  color: var(--color-blue-text);
+}
+
+.signin-screen__title {
+  margin: 32px 0 0;
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 40px;
+  letter-spacing: 0.37px;
+  color: var(--color-primary-900);
+}
+
+.signin-screen__subtitle {
+  margin: 12px 0 0;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 28px;
+  letter-spacing: -0.45px;
+  color: var(--color-primary-900);
+}
+
+.signin-screen__options {
+  margin-top: 96px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: var(--card-gap);
+}
+
+.signin-card {
+  width: 100%;
+  max-width: var(--card-width);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background-color: var(--color-card-bg);
+  border: none;
+  border-radius: 24px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  font-family: inherit;
+  color: var(--color-primary-900);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.signin-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.signin-card:focus-visible {
+  outline: 2px solid var(--color-primary-900);
+  outline-offset: 4px;
+}
+
+.signin-card__icon {
+  width: 96px;
+  height: 96px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: #ffffff;
+}
+
+.signin-card--user .signin-card__icon {
+  background: var(--gradient-blue);
+}
+
+.signin-card--vendor .signin-card__icon {
+  background: var(--gradient-orange);
+}
+
+.signin-card__icon-svg {
+  width: 48px;
+  height: 48px;
+  stroke-width: 1.5;
+}
+
+.signin-card__icon-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
+}
+
+.signin-card__title {
+  margin-top: 24px;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+  letter-spacing: 0.07px;
+  color: var(--color-primary-900);
+}
+
+.signin-card__description {
+  margin-top: 8px;
+  max-width: 372px;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: -0.31px;
+  color: var(--color-muted);
+}
+
+.signin-card__action {
+  margin-top: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: -0.31px;
+}
+
+.signin-card--user .signin-card__action {
+  color: var(--color-blue-text);
+}
+
+.signin-card--vendor .signin-card__action {
+  color: var(--color-orange-text);
+}
+
+@media (max-width: 1024px) {
+  .signin-screen {
+    --card-gap: 32px;
+  }
+}
+
+@media

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
-import "./css/Signin.css";
+import "./styles/Signin.css";
 
 function Signin({
   onSubmit = () => {},

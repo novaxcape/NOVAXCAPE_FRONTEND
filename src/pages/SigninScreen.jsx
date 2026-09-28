@@ -1,5 +1,5 @@
 import { FiUser, FiArrowRight } from "react-icons/fi";
-import "./styles/SignInScreen.css";
+import "./styles/SigninScreen.css";
 
 const ACCOUNT_OPTIONS = [
   {

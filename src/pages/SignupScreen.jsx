@@ -1,93 +1,104 @@
-import {  FiUser, FiBriefcase, FiCheck } from "react-icons/fi";
-import "./styles/SignupScreen.css";
+import React from "react";
+import "../Styles/SignUpScreen.css";
+import { TbUser } from "react-icons/tb";
+import { HiMiniBuildingOffice2 } from "react-icons/hi2";
+import { FaCheckCircle } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
-const USER_FEATURES = [
-  "Browse tourism centers and attractions",
-  "Instant booking and confirmation",
-  "Exclusive deals and offers",
-];
+const SignUpScreen = () => {
+  const navigate = useNavigate();
 
-const VENDOR_FEATURES = [
-  "Manage bookings and reservations",
-  "Automated payment processing",
-  "Marketing and promotion support",
-];
-
-function RoleCard({ variant, icon, title, description, features, onGetStarted }) {
   return (
-    <div className={`signup-screen-card signup-screen-card--${variant}`}>
-      <div className={`signup-screen-icon-circle signup-screen-icon-circle--${variant}`}>
-        {icon}
+    <div className="signup-page">
+      {/* Logo */}
+      <div className="signup-logo">
+        <img src="" alt="NovaXcape" />
       </div>
 
-      <h2 className="signup-screen-card-title">{title}</h2>
-      <p className="signup-screen-card-description">{description}</p>
+      {/* Header */}
+      <div className="signup-header">
+        <h1>Welcome to NovaXcape</h1>
+        <p>Choose how you'd like to join our community</p>
+      </div>
 
-      <ul className="signup-screen-feature-list">
-        {features.map((feature) => (
-          <li key={feature} className="signup-screen-feature-item">
-            <span className={`signup-screen-feature-check signup-screen-feature-check--${variant}`}>
-              <FiCheck size={12} color="#ffffff" />
-            </span>
-            {feature}
-          </li>
-        ))}
-      </ul>
+      {/* Cards */}
+      <div className="signup-cards">
+        {/* User Card */}
+        <div
+          className="signup-card"
+          onClick={() => navigate("/signup")}
+        >
+          <div className="icon-circle user-icon">
+            <TbUser />
+          </div>
 
-      <button
-        type="button"
-        className={`signup-screen-get-started signup-screen-get-started--${variant}`}
-        onClick={onGetStarted}
-      >
-        Get Started →
-      </button>
-    </div>
-  );
-}
+          <h2>Sign Up as User</h2>
 
-function SignupScreen({ onSelectUser = () => {}, onSelectVendor = () => {} }) {
-  return (
-    <div className="signup-screen-page">
-      <div className="signup-screen-header">
-        <div className="signup-screen-logo">
-          <img
-          src="/novapics/logo.png"
-          alt="logo"
-          className="logo"
-        />
-          <span className="signup-screen-logo-nova">Nova</span><span className="signup-screen-logo-xcape">Xcape</span>
+          <p className="card-description">
+            Discover and book amazing tourism experiences across Nigeria
+          </p>
+
+          <ul>
+            <li>
+              <FaCheckCircle />
+              Browse tourism centers and attractions
+            </li>
+
+            <li>
+              <FaCheckCircle />
+              Instant booking and confirmation
+            </li>
+
+            <li>
+              <FaCheckCircle />
+              Exclusive deals and offers
+            </li>
+          </ul>
+
+          <span className="user-btn">
+            Get Started →
+          </span>
         </div>
 
-        <h1 className="signup-screen-heading">Welcome to NovaXcape</h1>
-        <p className="signup-screen-subheading">
-          Choose how you'd like to join our community
-        </p>
-      </div>
+        {/* Vendor Card */}
+        <div
+          className="signup-card-vendor"
+          onClick={() => navigate("/signupvendor")}
+        >
+          <div className="icon-circle vendor-icon">
+            <HiMiniBuildingOffice2 />
+          </div>
 
-      <div className="signup-screen-cards">
-        <RoleCard
-          variant="user"
-          icon={<FiUser size={48} color="#ffffff" />}
-          title="Sign Up as User"
-          description="Discover and book amazing tourism experiences across Nigeria"
-          features={USER_FEATURES}
-          onGetStarted={onSelectUser}
-        />
-        <RoleCard
-          variant="vendor"
-          icon={<img
-          src="/novapics/Icon.png"
-          alt="icon"
-          className="icon"
-        />}
-          title="Sign Up as Vendor"
-          description="List your tourism center and reach thousands of travelers"
-          features={VENDOR_FEATURES}
-          onGetStarted={onSelectVendor}
-        />
+          <h2>Sign Up as Vendor</h2>
+
+          <p className="vendor-card-description">
+            List your tourism center and reach thousands of travelers
+          </p>
+
+          <ul>
+            <li>
+              <FaCheckCircle />
+              Manage bookings and reservations
+            </li>
+
+            <li>
+              <FaCheckCircle />
+              Automated payment processing
+            </li>
+
+            <li>
+              <FaCheckCircle />
+              Marketing and promotion support
+            </li>
+          </ul>
+
+          <span className="vendor-btn">
+            Get Started →
+          </span>
+        </div>
       </div>
     </div>
   );
-}
+};
 
-export default SignupScreen;
+export default SignUpScreen;

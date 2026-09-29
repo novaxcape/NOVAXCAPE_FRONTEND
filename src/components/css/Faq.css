@@ -1,0 +1,156 @@
+.faq-section {
+  width: 100%;
+  min-height: 100vh;
+  background: #f8f8f8;
+  padding: 50px 20px;
+}
+
+.faq-title {
+  text-align: center;
+  color: #0b4db8;
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.faq-subtitle {
+  max-width: 650px;
+  margin: 0 auto 50px;
+  text-align: center;
+  color: #444;
+  line-height: 1.6;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+/* --- REDUCED CONTAINER BOX WIDTH SLIGHTLY --- */
+.faq-container {
+  max-width: 680px; /* Reduced width slightly for a sleeker profile */
+  margin: auto;
+}
+
+/* --- THE MAIN BOX CONTAINER WITH INCREASED HEIGHT & MORE SPACE BETWEEN THEM --- */
+.faq-item {
+  background: #F4F3F3; 
+  border: 1px solid #dcdcdc;
+  border-radius: 16px; 
+  
+  /* --- INCREASED SPACE BETWEEN FAQS --- */
+  margin-bottom: 30px; /* Increased from 16px to give much more breathing room between cards */
+  
+  /* --- INCREASED HEIGHT BY BOOSTING VERTICAL PADDING --- */
+  padding: 26px 24px; /* Increased vertical padding to make the boxes taller */
+  
+  cursor: pointer;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* --- INTERACTIVE LIGHT BLUE HOVER/CLICK EFFECT STATE --- */
+.faq-item:hover,
+.faq-item.active {
+  background: #D4E6F1; 
+}
+
+.faq-item.active {
+  border-color: #0b4db8; 
+}
+
+/* --- CONTAINER TOP CONTENT ROW GRID --- */
+.faq-header-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 30px;
+  align-items: center;
+  width: 100%;
+}
+
+/* --- INDEX CONTAINER HANDLING --- */
+.faq-number {
+  font-size: 15px;
+  font-weight: 600;
+  color: #555;
+  text-align: left;
+  transition: color 0.2s ease;
+}
+
+.faq-item.active .faq-number {
+  color: #0b4db8;
+}
+
+/* --- QUESTION TEXT GRAPHICS --- */
+.question-text {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: #222;
+  transition: color 0.2s ease;
+  padding: 0 10px;
+}
+
+.faq-item.active .question-text {
+  color: #0b4db8;
+}
+
+/* --- SIGNS AND ARROWS --- */
+.faq-icon {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  color: #222;
+  font-size: 16px;
+  transition: color 0.2s ease;
+}
+
+.faq-item.active .faq-icon {
+  color: #0b4db8;
+}
+
+/* --- ANSWER TEXT CONTAINER ELEMENT --- */
+.faq-answer-content {
+  margin-top: 18px; /* Slightly more space before the text due to box size increase */
+  width: 100%;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.faq-answer-content p {
+  text-align: center; 
+  line-height: 1.6;
+  color: #333;
+  font-size: 14px;
+  font-weight: 400;
+  margin: 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- MOBILE BREAKPOINTS SIZING ADJUSTMENTS --- */
+@media (max-width: 768px) {
+  .faq-title {
+    font-size: 2rem;
+  }
+
+  .faq-item {
+    padding: 18px 16px; /* Scales down layout height beautifully on screens like phones */
+    margin-bottom: 20px; /* Gives slightly tightened spacing for mobile displays */
+  }
+
+  .faq-header-row {
+    grid-template-columns: 40px 1fr 24px;
+  }
+
+  .question-text {
+    font-size: 14px;
+  }
+
+  .faq-answer-content p {
+    font-size: 13px;
+  }
+
+  .faq-subtitle {
+    font-size: 14px;
+  }
+}

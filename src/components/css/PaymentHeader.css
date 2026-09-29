@@ -1,0 +1,174 @@
+.payment-navbar-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  width: 100%;
+  height: 80px;
+  background-color: #ffffff;
+  border-bottom: 2px solid #0056b3;
+  box-sizing: border-box;
+}
+
+.p-navbar-inner-container {
+  max-width: 1200px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.p-navbar-logo-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.p-navbar-brand-logo {
+  height: 36px;
+  width: auto;
+  display: block;
+}
+
+.p-navbar-navigation-links {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+
+.p-nav-item-link {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 19px;
+  line-height: 28px;
+  color: #271A13;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.p-nav-item-link.p-nav-active {
+  color: #0056b3; 
+}
+
+.p-nav-item-link:hover {
+  color: #0056b3;
+}
+
+/* Strips default HTML button borders causing the ugly black squares */
+.p-navbar-action-btn {
+  background: none;
+  border: none;
+  outline: none;
+  padding: 0;
+  color: #1a1a1a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.p-navbar-action-btn:hover {
+  color: #0056b3;
+}
+
+.p-navbar-desktop-actions {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.p-navbar-mobile-actions {
+  display: none;
+}
+
+.payment-page-offset {
+  padding-top: 80px;
+}
+
+/* =========================================
+   DROPDOWN POSITIONING AND FIXES
+========================================= */
+.p-user-menu-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.p-profile-dropdown-menu {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  width: 180px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 1100;
+  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.p-profile-dropdown-menu button {
+  background: none;
+  border: none;
+  outline: none;
+  width: 100%;
+  text-align: left;
+  padding: 10px 16px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #333333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.p-profile-dropdown-menu button:hover {
+  background-color: #f7fafc;
+  color: #0056b3;
+}
+
+.p-dropdown-divider {
+  border: 0;
+  height: 1px;
+  background: #edf2f7;
+  margin: 4px 0;
+}
+
+.p-profile-dropdown-menu button.p-dropdown-logout-btn {
+  color: #e53e3e;
+}
+
+.p-profile-dropdown-menu button.p-dropdown-logout-btn:hover {
+  background-color: #fff5f5;
+}
+
+/* Responsive Queries */
+@media (max-width: 1240px) {
+  .p-navbar-inner-container { padding: 0 24px; }
+}
+
+@media (max-width: 992px) {
+  .p-navbar-navigation-links { gap: 20px; }
+  .p-navbar-desktop-actions { gap: 18px; }
+}
+
+@media (max-width: 768px) {
+  .p-navbar-navigation-links { display: none; }
+  .p-navbar-desktop-actions { display: none; }
+  .p-navbar-mobile-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .mobile-dropdown-adjust {
+    top: 40px;
+    right: -20px;
+  }
+}

@@ -1,73 +1,62 @@
-import { FiUser, FiArrowRight } from "react-icons/fi";
-import "./styles/SigninScreen.css";
+import React from "react";
+import "../Styles/SignInScreen.css";
+import { TbUser } from "react-icons/tb";
+import { HiMiniBuildingOffice2 } from "react-icons/hi2";
+import { useNavigate } from "react-router-dom";
 
-const ACCOUNT_OPTIONS = [
-  {
-    id: "user",
-    title: "Sign in as User",
-    description:
-      "Discover and book amazing tourism experiences across Nigeria",
-  },
-  {
-    id: "vendor",
-    title: "Sign in as Vendor",
-    description: "List your tourism center and reach thousands of travelers",
-  },
-];
+const SignInScreen = () => {
+  const navigate = useNavigate();
 
-function SignInScreen({ onSelect }) {
   return (
-    <main className="signin-screen">
-      <header className="signin-screen__header">
-        <div className="signin-screen__brand">
-          <img
-            className="signin-screen__logo"
-            src="/novapics/logo.png"
-            alt=""
-          />
-          <span className="signin-screen__brand-name">
-            <span className="signin-screen__brand-nova">Nova</span>
-            <span className="signin-screen__brand-xcape">Xcape</span>
+    <div className="signup-page">
+      <div className="signup-logo">
+        <img src="" alt="NovaXcape" />
+      </div>
+
+      <div className="signup-header">
+        <h1>Welcome to NovaXcape</h1>
+        <p>Sign in to our community</p>
+      </div>
+
+      <div className="signup-cards">
+        {/* User Sign Up Card */}
+        <div 
+          className="signup-card" 
+          onClick={() => navigate("/signin")}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="icon-circle user-icon">
+            <TbUser />
+          </div>
+          <h2>Sign In as User</h2>
+          <p className="card-description">
+            Discover and book amazing tourism experiences across Nigeria
+          </p>
+          <span className="user-btn" style={{ cursor: "pointer" }}>
+            Get Started →
           </span>
         </div>
-        <h1 className="signin-screen__title">Welcome to NovaXcape</h1>
-        <p className="signin-screen__subtitle">Sign in to our community</p>
-      </header>
 
-      <section className="signin-screen__options">
-        {ACCOUNT_OPTIONS.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            className={`signin-card signin-card--${option.id}`}
-            onClick={() => onSelect?.(option.id)}
-          >
-            <span className="signin-card__icon" aria-hidden="true">
-              {option.id === "user" ? (
-                <FiUser className="signin-card__icon-svg" />
-              ) : (
-                <img
-                  className="signin-card__icon-img"
-                  src="/novapics/Icon.png"
-                  alt=""
-                />
-              )}
-            </span>
-
-            <span className="signin-card__title">{option.title}</span>
-            <span className="signin-card__description">
-              {option.description}
-            </span>
-
-            <span className="signin-card__action">
-              Get Started
-              <FiArrowRight aria-hidden="true" />
-            </span>
-          </button>
-        ))}
-      </section>
-    </main>
+        {/* Vendor Sign Up Card */}
+        <div 
+          className="signup-card-vendor" 
+          onClick={() => navigate("/vendor/login")}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="icon-circle vendor-icon">
+            <HiMiniBuildingOffice2 />
+          </div>
+          <h2>Sign In as Vendor</h2>
+          <p className="vendor-card-description">
+            List your tourism center and reach thousands of travelers
+          </p>
+          <span className="vendor-btn" style={{ cursor: "pointer" }}>
+            Get Started →
+          </span>
+        </div>
+      </div>
+    </div>
   );
-}
+};
 
 export default SignInScreen;

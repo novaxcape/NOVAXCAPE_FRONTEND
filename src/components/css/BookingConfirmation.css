@@ -1,0 +1,381 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+
+.confirmation-page-wrapper {
+  background-color: #fafafa;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 16px;
+  box-sizing: border-box;
+}
+
+.confirmation-card {
+  background-color: #ffffff;
+  border: 1px solid #eaeaea;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 580px;
+  padding: 36px 24px 32px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Success badge ── */
+.success-badge-container {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.success-checkmark-img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  display: block;
+}
+
+/* ── Title & subtitle ── */
+.confirmation-title {
+  font-size: 28px;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: 0px;
+  font-family: 'Manrope', sans-serif;
+  color: #111111;
+  margin: 0 0 6px 0;
+  text-align: center;
+}
+
+.confirmation-subtitle {
+  line-height: 1.5;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 0px;
+  font-family: 'Manrope', sans-serif;
+  color: #000000;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+/* ── Email toast ── */
+.email-toast-message {
+  background-color: #dbe7f4;
+  border: 1px solid #abc1dc;
+  border-radius: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+}
+
+.email-left-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.email-toast-icon {
+  font-size: 16px;
+  color: #0060a3;
+  flex-shrink: 0;
+}
+
+.email-toast-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #0060a3;
+  line-height: 1.4;
+  white-space: normal;
+}
+
+/* ── Booking details box ── */
+.booking-details-box {
+  background-color: #ffffff;
+  border: 1px solid #f2f2f2;
+  border-radius: 12px;
+  width: 100%;
+  padding: 18px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.details-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0 0 4px 0;
+}
+
+.detail-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.detail-meta-icon {
+  font-size: 20px;
+  color: #0060a3;
+  flex-shrink: 0;
+}
+
+.detail-text-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-field-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #888888;
+}
+
+.detail-field-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #222222;
+}
+
+/* ── Passcode card ── */
+.passcode-container-card {
+  background: linear-gradient(135deg, #fff3ee 0%, #edf1f5 100%);
+  border: 1.5px solid #ff7643;
+  border-radius: 14px;
+  width: 100%;
+  padding: 22px 16px 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.passcode-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.passcode-shield-icon {
+  font-size: 16px;
+  color: #ff7643;
+}
+
+.passcode-main-heading {
+  font-size: 15px;
+  font-weight: 700;
+  color: #222222;
+  margin: 0;
+}
+
+.passcode-sub-caption {
+  font-size: 12px;
+  color: #666666;
+  margin: 0 0 18px 0;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.passcode-display-block {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 12px 20px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 260px;
+  box-sizing: border-box;
+  margin-bottom: 18px;
+  transition: background 0.15s ease;
+}
+
+.passcode-display-block:hover {
+  background-color: #fff8f6;
+}
+
+.passcode-digit {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111111;
+  letter-spacing: 1px;
+}
+
+.download-passcode-action-btn {
+  background-color: transparent;
+  border: 1px solid #a0a0a0;
+  border-radius: 24px;
+  width: 100%;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.download-passcode-action-btn:hover {
+  border-color: #ff7643;
+  color: #ff7643;
+}
+
+.download-action-icon {
+  font-size: 14px;
+}
+
+/* ── Footer button ── */
+.navigation-footer-action {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.homepage-redirect-btn {
+  background-color: #ff6633;
+  color: #ffffff;
+  border: none;
+  border-radius: 24px;
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-sizing: border-box;
+  font-family: 'Manrope', sans-serif;
+  transition: background 0.15s ease;
+}
+
+.homepage-redirect-btn:hover {
+  background-color: #e55a2b;
+}
+
+/* ── Loading state ── */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 0;
+  gap: 14px;
+  width: 100%;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid #f0f0f0;
+  border-top-color: #ff6633;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Failed state ── */
+.failed-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0;
+  gap: 12px;
+  width: 100%;
+}
+
+.failed-icon {
+  font-size: 52px;
+  margin-bottom: 4px;
+}
+
+/* ── Pending state ── */
+.pending-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0;
+  gap: 12px;
+  width: 100%;
+}
+
+.pending-icon {
+  font-size: 52px;
+  margin-bottom: 4px;
+}
+
+/* ── Tablet and up ── */
+@media (min-width: 541px) {
+  .confirmation-page-wrapper {
+    align-items: center;
+    padding: 40px 20px;
+  }
+
+  .confirmation-card {
+    padding: 50px 40px;
+  }
+
+  .confirmation-title {
+    font-size: 40px;
+    line-height: 55px;
+  }
+
+  .confirmation-subtitle {
+    font-size: 20px;
+  }
+
+  .success-checkmark-img {
+    width: 80px;
+    height: 80px;
+  }
+
+  .email-toast-text {
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .booking-details-box {
+    padding: 24px;
+    gap: 24px;
+  }
+
+  .passcode-container-card {
+    padding: 28px 24px;
+  }
+
+  .passcode-display-block {
+    padding: 14px 30px;
+    gap: 16px;
+    max-width: none;
+  }
+
+  .passcode-digit {
+    font-size: 26px;
+  }
+
+  .download-passcode-action-btn {
+    max-width: 380px;
+  }
+
+  .homepage-redirect-btn {
+    max-width: 320px;
+  }
+}

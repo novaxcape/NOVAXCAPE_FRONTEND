@@ -1,0 +1,234 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.signup-page {
+  min-height: 100vh;
+  background: #f8f8f8;
+  padding: 30px 20px 50px;
+}
+
+/* Logo */
+
+.signup-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.signup-logo img {
+  width: 150px;
+  height: auto;
+}
+
+/* Header */
+
+.signup-header {
+  text-align: center;
+  margin-bottom: 45px;
+}
+
+.signup-header h1 {
+  font-size: 34px;
+  font-weight: 600;
+  color: #22100d;
+  margin-bottom: 8px;
+}
+
+.signup-header p {
+  font-size: 16px;
+  color: #666;
+}
+
+/* Cards Container */
+
+.signup-cards {
+  max-width: 780px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+/* Shared Card Styling */
+
+.signup-card,
+.signup-card-vendor {
+  width: 340px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 25px 22px;
+  border: 1px solid transparent;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.signup-card:hover {
+  border-color: #0057b8;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
+}
+
+.signup-card-vendor:hover {
+  border-color: #ff7139;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
+}
+
+/* Icons */
+
+.icon-circle {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  margin: 0 auto 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.user-icon {
+  background: #0057b8;
+}
+
+.vendor-icon {
+  background: #ff7139;
+}
+
+.icon-circle svg {
+  font-size: 30px;
+  color: white;
+}
+
+/* Card Titles */
+
+.signup-card h2,
+.signup-card-vendor h2 {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  color: #1a0800;
+  margin-bottom: 10px;
+}
+
+/* Description */
+
+.card-description,
+.vendor-card-description {
+  text-align: center;
+  color: #8a8a8a;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+/* Feature List */
+
+.signup-card ul,
+.signup-card-vendor ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 20px;
+}
+
+.signup-card ul li,
+.signup-card-vendor ul li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* User Icons */
+
+.signup-card li svg {
+  color: #0057b8 !important;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+/* Vendor Icons */
+
+.signup-card-vendor li svg {
+  color: #ff7139 !important;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+/* Buttons */
+
+.user-btn,
+.vendor-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.user-btn {
+  color: #0057b8;
+}
+
+.vendor-btn {
+  color: #ff7139;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .signup-header h1 {
+    font-size: 28px;
+  }
+
+  .signup-header p {
+    font-size: 14px;
+  }
+
+  .signup-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .signup-card,
+  .signup-card-vendor {
+    width: 100%;
+    max-width: 350px;
+  }
+
+  .icon-circle {
+    width: 65px;
+    height: 65px;
+  }
+
+  .icon-circle svg {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .signup-page {
+    padding: 20px 15px 40px;
+  }
+
+  .signup-header h1 {
+    font-size: 24px;
+  }
+
+  .signup-card,
+  .signup-card-vendor {
+    padding: 20px 18px;
+  }
+
+  .signup-card h2,
+  .signup-card-vendor h2 {
+    font-size: 20px;
+  }
+}

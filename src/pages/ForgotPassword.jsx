@@ -1,103 +1,137 @@
-import { useState } from "react";
-import "./styles/ForgotPassword.css";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import axios from "axios";
+import "../Styles/Login.css";
+import Image from "../components/Image";
 
-function ForgotPassword({
-  onSubmit = () => {},
-  isSubmitting = false,
-  serverError = "",
-}) {
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://novaxcape.onrender.com/api/v1";
+
+const ForgotPassword = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
-  const [fieldError, setFieldError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleChange(event) {
-    setEmail(event.target.value);
-    if (fieldError) {
-      setFieldError("");
+  const handleChange = (e) => {
+    setEmail(e.target.value);
+    if (error) setError("");
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validation
+    if (!email) {
+      setError("Please enter your email address");
+      return;
     }
-  }
-
-  function validate(value) {
-    if (!value.trim()) {
-      return "Email is required.";
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      return "Enter a valid email address.";
+    
+    setLoading(true);
+    setError("");
+    
+    try {
+      // API CALL to send OTP
+      const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, {
+        email: email,
+      });
+      
+      console.log("Forgot password response:", response.data);
+      
+      Swal.fire({
+        icon: "success",
+        title: "OTP Sent!",
+        text: "A verification code has been sent to your email.",
+        confirmButtonColor: "#ff6b35",
+      });
+      
+      // Navigate to verification code page with email
+      navigate("/verify-email", { state: { email: email, type: "reset" } });
+      
+    } catch (error) {
+      console.error("Forgot password error:", error.response?.data);
+      const errorMessage = error.response?.data?.message || "Failed to send OTP. Please try again.";
+      setError(errorMessage);
+      
+      Swal.fire({
+        icon: "error",
+        title: "Failed",
+        text: errorMessage,
+        confirmButtonColor: "#ff6b35",
+      });
+    } finally {
+      setLoading(false);
     }
-    return "";
-  }
-
-  function handleSubmit(event) {
-    event.preventDefault();
-
-    const error = validate(email);
-    setFieldError(error);
-
-    if (!error) {
-      onSubmit({ email });
-    }
-  }
+  };
 
   return (
-    <div className="forgot-password-page">
-      <div className="forgot-password-image-section">
-        <img
-          src="/novapics/signup.jpg"
-          alt="A traveler with a backpack looking out over mountains and a river"
-          className="forgot-password-hero-image"
-        />
-        <div className="forgot-password-image-overlay">
-          <h2 className="forgot-password-image-heading">Forgot Password?</h2>
-          <p className="forgot-password-image-text">
-            No worries! It happens. Enter the Email address associated with
-            your account to receive OTP code.
-          </p>
+    <div className="login-wrapper">
+      <div className="login-container">
+        <div className="login-panel">
+          <Image />
         </div>
-      </div>
 
-      <div className="forgot-password-form-section">
-        <h1 className="forgot-password-form-heading">Enter Email</h1>
-
-        {serverError ? (
-          <p className="forgot-password-server-error" role="alert">
-            {serverError}
+        <div className="rightLogin-panel">
+          <h2>Forgot Password?</h2>
+          
+          <p className="forgot-description">
+            No worries! It happens.<br />
+            Enter the Email address associated with your account to receive OTP code.
           </p>
-        ) : null}
 
-        <form className="forgot-password-form" onSubmit={handleSubmit} noValidate>
-          <div className="forgot-password-field">
-            <label htmlFor="email" className="forgot-password-label">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="Enter your Email"
-              className="forgot-password-input"
-              value={email}
-              onChange={handleChange}
-              disabled={isSubmitting}
-              aria-invalid={Boolean(fieldError)}
-              aria-describedby={fieldError ? "email-error" : undefined}
-            />
-            {fieldError ? (
-              <span id="email-error" className="forgot-password-error-text">
-                {fieldError}
-              </span>
-            ) : null}
-          </div>
+          {error && (
+            <div className="error-message" style={{
+              color: "red",
+              textAlign: "center",
+              marginBottom: "15px",
+              padding: "10px",
+              backgroundColor: "#ffeeee",
+              borderRadius: "5px",
+              fontSize: "14px"
+            }}>
+              {error}
+            </div>
+          )}
 
-          <button
-            type="submit"
-            className="forgot-password-submit-button"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Sending..." : "Next"}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Enter your Email</label>
+              <input
+                type="email"
+                placeholder="Enter your Email"
+                value={email}
+                onChange={handleChange}
+                disabled={loading}
+                required
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  border: "1px solid #ddd",
+                  borderRadius: "5px",
+                  fontSize: "16px"
+                }}
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              className="signup-btn" 
+              disabled={loading}
+              style={{ opacity: loading ? 0.7 : 1 }}
+            >
+              {loading ? "Sending..." : "Next"}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
-}
+};
 
 export default ForgotPassword;

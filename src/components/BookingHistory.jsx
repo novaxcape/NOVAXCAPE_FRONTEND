@@ -1,0 +1,412 @@
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import "./css/BookingHistory.css";
+import { FiSearch, FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
+import { getAllClientBookings, clearApiError } from "../redox/apiSlice";
+
+const BookingHistory = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [selectedBooking, setSelectedBooking] = useState(null); // NEW: booking shown in popup
+  const itemsPerPage = 5;
+
+  const { clientBookings, bookingLoading, bookingError } = useSelector(
+    (state) => state.api
+  );
+  const { isAuthenticated } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(getAllClientBookings());
+    }
+    return () => {
+      dispatch(clearApiError());
+    };
+  }, [dispatch, isAuthenticated]);
+
+  // Map API data to display format
+  const mapBookingsToDisplay = (bookings) => {
+    if (!bookings || bookings.length === 0) return [];
+
+    return bookings.map((booking) => ({
+      id: booking.id,
+      ticketId: booking.bookingNumber || booking.ticketId,
+      packageName: booking.package?.packageName || booking.packageName,
+      centreName: booking.tourist?.centreName || booking.centreName,
+      date: booking.visitDate || booking.date,
+      amount: booking.package?.amount || booking.amount,
+      status: booking.status,
+      rawData: booking,
+    }));
+  };
+
+  const displayBookings = mapBookingsToDisplay(clientBookings);
+
+  // Filter and search bookings
+  const filteredBookings = displayBookings.filter((booking) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      booking.ticketId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.packageName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.centreName?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      filterStatus === "all" || booking.status?.toLowerCase() === filterStatus.toLowerCase();
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedBookings = filteredBookings.slice(startIndex, startIndex + itemsPerPage);
+
+  const getStatusBadge = (status) => {
+    const statusMap = {
+      pending: { class: "badge-progress", text: "In Progress" },
+      confirmed: { class: "badge-successful", text: "Confirmed" },
+      completed: { class: "badge-successful", text: "Completed" },
+      cancelled: { class: "badge-cancelled", text: "Cancelled" },
+      camcelled: { class: "badge-cancelled", text: "Cancelled" }, // Fix API typo
+      installment: { class: "badge-installment", text: "Installment" },
+      in_progress: { class: "badge-progress", text: "In Progress" },
+      successful: { class: "badge-successful", text: "Successful" },
+    };
+    const defaultStatus = { class: "badge-progress", text: status || "Pending" };
+    return statusMap[status?.toLowerCase()] || defaultStatus;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const formatAmount = (amount) => {
+    if (!amount) return "₦0";
+    return `₦${amount.toLocaleString()}`;
+  };
+
+  // CHANGED: instead of navigating, open the popup with this booking's details
+  const handleViewDetails = (booking) => {
+    setSelectedBooking(booking);
+  };
+
+  const handleClosePopup = () => {
+    setSelectedBooking(null);
+  };
+
+  const handleBackToHome = () => {
+    navigate("/");
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const getStatusFilterOptions = () => {
+    const statuses = [
+      { value: "all", label: "All" },
+      { value: "pending", label: "In Progress" },
+      { value: "confirmed", label: "Confirmed" },
+      { value: "completed", label: "Completed" },
+      { value: "cancelled", label: "Cancelled" },
+      { value: "camcelled", label: "Cancelled" },
+      { value: "installment", label: "Installment" },
+    ];
+    return statuses;
+  };
+
+  if (bookingLoading) {
+    return (
+      <div className="history-page-wrapper">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Loading your bookings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (bookingError) {
+    return (
+      <div className="history-page-wrapper">
+        <div className="error-container">
+          <p className="error-text">{bookingError}</p>
+          <button
+            className="retry-btn"
+            onClick={() => dispatch(getAllClientBookings())}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="history-page-wrapper">
+      <div className="history-header-row">
+        <div className="header-text-block">
+          <h1 className="history-main-title">Booking History</h1>
+          <p className="history-sub-caption">Review your past Bookings.</p>
+        </div>
+        <button className="back-home-redirect-btn" onClick={handleBackToHome}>
+          Back To Home
+        </button>
+      </div>
+
+      <div className="history-toolbar-card">
+        <div className="search-input-wrapper">
+          <div className="search-icon-square">
+            <FiSearch className="toolbar-search-icon" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search by Ticket ID, Centre, or Package"
+            className="toolbar-text-input"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+
+        <select
+          className="filter-dropdown-trigger-btn"
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setCurrentPage(1);
+          }}
+        >
+          {getStatusFilterOptions().map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {filteredBookings.length === 0 ? (
+        <div className="empty-bookings-container">
+          <img src="" alt="No bookings" />
+          <h3>No Bookings Found</h3>
+          <p>
+            {searchTerm || filterStatus !== "all"
+              ? "Try adjusting your search or filter criteria"
+              : "You haven't made any bookings yet"}
+          </p>
+          {!searchTerm && filterStatus === "all" && (
+            <button onClick={() => navigate("/discover")} className="explore-btn">
+              Explore Centres
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          <div className="table-overflow-container">
+            <table className="history-data-table">
+              <thead>
+                <tr>
+                  <th className="th-checkbox-cell">
+                    <div className="custom-table-checkbox"></div>
+                  </th>
+                  <th>Ticket ID</th>
+                  <th>Package</th>
+                  <th>Centre</th>
+                  <th>Date</th>
+                  <th>Total Amount</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedBookings.map((booking, index) => {
+                  const statusBadge = getStatusBadge(booking.status);
+                  return (
+                    <tr className="table-data-row" key={booking.id || index}>
+                      <td className="td-checkbox-cell">
+                        <div className="custom-table-checkbox"></div>
+                      </td>
+                      <td className="ticket-id-txt">
+                        {booking.ticketId || `NOV-${booking.id?.slice(-5)}`}
+                      </td>
+                      <td className="ticket-type-txt">
+                        {booking.packageName || "Package"}
+                      </td>
+                      <td className="centre-name-txt">
+                        {booking.centreName || "Centre"}
+                      </td>
+                      <td className="date-txt">{formatDate(booking.date)}</td>
+                      <td className="amount-txt">{formatAmount(booking.amount)}</td>
+                      <td>
+                        <span className={`status-badge ${statusBadge.class}`}>
+                          {statusBadge.text}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className="view-details-btn"
+                          onClick={() => handleViewDetails(booking)}
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="history-table-footer-row">
+            <span className="pagination-count-summary-txt">
+              Showing {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredBookings.length)} of {filteredBookings.length} bookings
+            </span>
+
+            <div className="pagination-controls-wrapper">
+              <button
+                className={`pag-nav-btn ${currentPage === 1 ? "disabled-nav" : ""}`}
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <FiChevronLeft className="pag-arrow-icon" />
+                Back
+              </button>
+
+              {[...Array(Math.min(totalPages, 5))].map((_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                if (pageNum >= 1 && pageNum <= totalPages) {
+                  return (
+                    <button
+                      key={pageNum}
+                      className={`pag-num-btn ${currentPage === pageNum ? "active-num" : ""}`}
+                      onClick={() => handlePageChange(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                }
+                return null;
+              })}
+
+              {totalPages > 5 && currentPage < totalPages - 2 && (
+                <span className="pag-ellipsis-dots">...</span>
+              )}
+
+              {totalPages > 5 && currentPage < totalPages - 2 && (
+                <button
+                  className="pag-num-btn"
+                  onClick={() => handlePageChange(totalPages)}
+                >
+                  {totalPages}
+                </button>
+              )}
+
+              <button
+                className={`pag-nav-btn ${currentPage === totalPages ? "disabled-nav" : ""}`}
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+                <FiChevronRight className="pag-arrow-icon" />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* NEW: Booking details popup modal */}
+      {selectedBooking && (
+        <div className="booking-modal-overlay" onClick={handleClosePopup}>
+          <div
+            className="booking-modal-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="booking-modal-header">
+              <h2 className="booking-modal-title">Booking Details</h2>
+              <button className="booking-modal-close-btn" onClick={handleClosePopup}>
+                <FiX />
+              </button>
+            </div>
+
+            <div className="booking-modal-body">
+              <div className="booking-modal-row">
+                <span className="booking-modal-label">Ticket ID</span>
+                <span className="booking-modal-value">
+                  {selectedBooking.ticketId || `NOV-${selectedBooking.id?.slice(-5)}`}
+                </span>
+              </div>
+
+              <div className="booking-modal-row">
+                <span className="booking-modal-label">Package</span>
+                <span className="booking-modal-value">
+                  {selectedBooking.packageName || "Package"}
+                </span>
+              </div>
+
+              <div className="booking-modal-row">
+                <span className="booking-modal-label">Centre</span>
+                <span className="booking-modal-value">
+                  {selectedBooking.centreName || "Centre"}
+                </span>
+              </div>
+
+              <div className="booking-modal-row">
+                <span className="booking-modal-label">Date</span>
+                <span className="booking-modal-value">
+                  {formatDate(selectedBooking.date)}
+                </span>
+              </div>
+
+              <div className="booking-modal-row">
+                <span className="booking-modal-label">Total Amount</span>
+                <span className="booking-modal-value">
+                  {formatAmount(selectedBooking.amount)}
+                </span>
+              </div>
+
+              <div className="booking-modal-row">
+                <span className="booking-modal-label">Status</span>
+                <span
+                  className={`status-badge ${getStatusBadge(selectedBooking.status).class}`}
+                >
+                  {getStatusBadge(selectedBooking.status).text}
+                </span>
+              </div>
+            </div>
+
+            <div className="booking-modal-footer">
+              <button className="booking-modal-close-action-btn" onClick={handleClosePopup}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default BookingHistory;

@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import "./css/BookingManagement.css";
-import { useDispatch, useSelector } from "react-redux";
-import { getVendorBookings, getVendorTouristCenters } from "../redox/apiSlice";
-import {
-  persistCentreId,
-  resolveCentreIds,
-  resolveCentreIdsFromSources,
-} from "../utils/vendorCentre";
+
+// UI-only build: static sample data (no API calls)
+const vendorBookings = [
+  { bookingNumber: "NOV-00001", packageName: "Adult Ticket", centreName: "Lekki Conservation Centre", visitDate: "2026-10-12", amount: 5000, status: "confirmed", passcode: "482913" },
+  { bookingNumber: "NOV-00002", packageName: "Family Pack", centreName: "Lekki Conservation Centre", visitDate: "2026-10-13", amount: 7500, status: "pending", passcode: "175302" },
+  { bookingNumber: "NOV-00003", packageName: "Children Ticket", centreName: "Lekki Conservation Centre", visitDate: "2026-10-14", amount: 1500, status: "cancelled", passcode: "" },
+  { bookingNumber: "NOV-00004", packageName: "Adult Ticket", centreName: "Lekki Conservation Centre", visitDate: "2026-10-15", amount: 12000, status: "pending", isInstallment: true, passcode: "" },
+  { bookingNumber: "NOV-00005", packageName: "Family Pack", centreName: "Lekki Conservation Centre", visitDate: "2026-10-16", amount: 7500, status: "completed", passcode: "930481" },
+  { bookingNumber: "NOV-00006", packageName: "Adult Ticket", centreName: "Lekki Conservation Centre", visitDate: "2026-10-18", amount: 2500, status: "confirmed", passcode: "660217" },
+];
 
 const tabs = [
   { label: "All Booking", count: 0, active: true },
@@ -31,24 +34,11 @@ const normalizeStatus = (booking) => {
 };
 
 export default function BookingManagement() {
-  const dispatch = useDispatch();
   const [isMobile, setIsMobile] = useState(false);
   const [activeTab, setActiveTab] = useState("All Booking");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  const {
-    vendorBookings,
-    vendorCentres,
-    vendorBookingPagination,
-    bookingLoading,
-  } = useSelector((state) => state.api);
-  const { vendorDetails } = useSelector((state) => state.auth);
-  const vendorId =
-    vendorDetails?.id ||
-    vendorDetails?._id ||
-    vendorDetails?.vendorId ||
-    localStorage.getItem("vendorId");
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 600);
@@ -56,44 +46,7 @@ export default function BookingManagement() {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
-  useEffect(() => {
-    if (!vendorId || vendorCentres?.length > 0) return;
-
-    dispatch(getVendorTouristCenters(vendorId)).catch((error) => {
-      console.warn("[BookingManagement] Unable to load vendor centres:", error);
-    });
-  }, [dispatch, vendorCentres, vendorId]);
-
-  // Fetch bookings for the vendor's centre(s). The booking API expects tourist/centre ids.
-  useEffect(() => {
-    const centreIdsFromApi = resolveCentreIdsFromSources(vendorCentres);
-    const touristIds =
-      centreIdsFromApi.length > 0 ? centreIdsFromApi : resolveCentreIds();
-
-    if (touristIds.length === 0) {
-      console.warn(
-        "⚠️ [BookingManagement] No centre IDs found — getVendorBookings NOT dispatched.",
-      );
-      return;
-    }
-
-    persistCentreId(touristIds[0]);
-
-    console.log(
-      "🔍 [BookingManagement] dispatching getVendorBookings for touristIds:",
-      touristIds,
-    );
-    dispatch(
-      getVendorBookings({
-        touristIds,
-        pageNumber: currentPage,
-        pageSize,
-      }),
-    );
-  }, [dispatch, vendorCentres, currentPage, pageSize]);
-
-  // Map real API booking objects to the table row shape
+  // Map booking objects to the table row shape
   const mapRealBookings = () => {
     if (!vendorBookings || vendorBookings.length === 0) {
       return [];
@@ -168,21 +121,10 @@ export default function BookingManagement() {
     Cancelled: "status-cancelled",
   };
 
-  // Pull pagination from vendorBookingPagination state
-  const totalBookings =
-    vendorBookingPagination?.totalDocuments ??
-    vendorBookingPagination?.totalDocument ??
-    vendorBookings?.length ??
-    0;
-
-  const totalPages =
-    vendorBookingPagination?.totalPages ??
-    Math.max(1, Math.ceil(totalBookings / pageSize));
-
-  const hasNextPage =
-    vendorBookingPagination?.hasNextPage ?? currentPage < totalPages;
-  const hasPreviousPage =
-    vendorBookingPagination?.hasPreviousPage ?? currentPage > 1;
+  const totalBookings = vendorBookings.length;
+  const totalPages = Math.max(1, Math.ceil(totalBookings / pageSize));
+  const hasNextPage = currentPage < totalPages;
+  const hasPreviousPage = currentPage > 1;
 
   // Handle page change
   const handlePageChange = (newPage) => {
@@ -194,16 +136,6 @@ export default function BookingManagement() {
     }
   };
 
-  if (bookingLoading && vendorBookings?.length === 0) {
-    return (
-      <div className="booking-page">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Loading bookings...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="booking-page">
@@ -245,12 +177,12 @@ export default function BookingManagement() {
             {isMobile ? "Recent Bookings" : "Recent Activity"}
           </h2>
           <button className="filter-btn">
-            <img src="" alt="" className="filter-icon" />
+            <img src="/novaxcape/filter.png" alt="" className="filter-icon" />
             Filter By
           </button>
         </div>
 
-        {filteredBookings.length === 0 && !bookingLoading && (
+        {filteredBookings.length === 0 && (
           <div className="no-bookings-message">
             <p>No bookings found</p>
           </div>

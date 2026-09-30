@@ -1,24 +1,23 @@
-import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { getAllClientBookings } from "../redox/apiSlice";import StatusBadge from "./StatusBadge";
+import { useState } from "react";
+import StatusBadge from "./StatusBadge";
 
-const RecentBookings = ({ 
+// UI-only build: static sample data (no API calls)
+const SAMPLE_BOOKINGS = [
+  { id: "TKT-1001", ticketType: "Adult Ticket", date: "12 Oct 2026", totalAmount: 5000, status: "Confirmed" },
+  { id: "TKT-1002", ticketType: "Family Pack", date: "12 Oct 2026", totalAmount: 7500, status: "Pending" },
+  { id: "TKT-1003", ticketType: "Children Ticket", date: "13 Oct 2026", totalAmount: 1500, status: "Confirmed" },
+  { id: "TKT-1004", ticketType: "Adult Ticket", date: "14 Oct 2026", totalAmount: 2500, status: "Cancelled" },
+  { id: "TKT-1005", ticketType: "Family Pack", date: "15 Oct 2026", totalAmount: 7500, status: "Confirmed" },
+];
+
+const RecentBookings = ({
   title = "Recent Booking",
   viewAllText = "View all",
-  onViewAll = () => {}
+  onViewAll = () => {},
+  bookings = SAMPLE_BOOKINGS,
 }) => {
-  const dispatch = useDispatch();
-  
-  // Extract booking data and loading state from the api slice
-  const { clientBookings, bookingLoading, bookingError } = useSelector((state) => state.api);
-
   const [checkedRows, setCheckedRows] = useState({});
   const [allChecked, setAllChecked] = useState(false);
-
-  // Fetch bookings on component mount
-  useEffect(() => {
-    dispatch(getAllClientBookings());
-  }, [dispatch]);
 
   const toggleRow = (index) => {
     setCheckedRows((prev) => ({ ...prev, [index]: !prev[index] }));
@@ -28,7 +27,7 @@ const RecentBookings = ({
     const next = !allChecked;
     setAllChecked(next);
     const all = {};
-    clientBookings.forEach((_, i) => (all[i] = next));
+    bookings.forEach((_, i) => (all[i] = next));
     setCheckedRows(all);
   };
 
@@ -51,7 +50,7 @@ const RecentBookings = ({
                   className="orange-checkbox"
                   checked={allChecked}
                   onChange={toggleAll}
-                  disabled={clientBookings.length === 0}
+                  disabled={bookings.length === 0}
                 />
               </th>
               <th>Ticket ID</th>
@@ -62,57 +61,32 @@ const RecentBookings = ({
             </tr>
           </thead>
           <tbody>
-            {bookingLoading ? (
-              <tr>
-                <td colSpan="6" style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>
-                  Loading bookings...
-                </td>
-              </tr>
-            ) : bookingError ? (
-              <tr>
-                <td colSpan="6" style={{ textAlign: "center", padding: "20px", color: "#ef4444" }}>
-                  Error loading data: {bookingError}
-                </td>
-              </tr>
-            ) : clientBookings.length === 0 ? (
+            {bookings.length === 0 ? (
               <tr>
                 <td colSpan="6" style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>
                   No bookings available
                 </td>
               </tr>
             ) : (
-              clientBookings.map((booking, index) => {
-                // Formatting Date cleanly if it comes as an ISO string
-                const bookingDate = booking.visitDate || booking.date || booking.createdAt || "N/A";
-                const formattedDate = typeof bookingDate === "string" && bookingDate.includes("T") 
-                  ? new Date(bookingDate).toLocaleDateString() 
-                  : bookingDate;
-
-                return (
-                  <tr key={booking.id || booking._id || index}>
-                    <td className="checkbox-col">
-                      <input
-                        type="checkbox"
-                        className="orange-checkbox"
-                        checked={!!checkedRows[index]}
-                        onChange={() => toggleRow(index)}
-                      />
-                    </td>
-                    <td className="ticket-id">{booking.id || booking._id || booking.ticketId || "N/A"}</td>
-                    {/* Maps back safely to backend key structures if nested */}
-                    <td>{booking.ticketType || booking.package?.name || booking.ticket || "N/A"}</td>
-                    <td>{formattedDate}</td>
-                    <td>
-                      {booking.totalAmount || booking.amount || booking.price 
-                        ? `₦${Number(booking.totalAmount || booking.amount || booking.price).toLocaleString()}` 
-                        : "N/A"}
-                    </td>
-                    <td>
-                      <StatusBadge status={booking.status || "Pending"} />
-                    </td>
-                  </tr>
-                );
-              })
+              bookings.map((booking, index) => (
+                <tr key={booking.id || index}>
+                  <td className="checkbox-col">
+                    <input
+                      type="checkbox"
+                      className="orange-checkbox"
+                      checked={!!checkedRows[index]}
+                      onChange={() => toggleRow(index)}
+                    />
+                  </td>
+                  <td className="ticket-id">{booking.id}</td>
+                  <td>{booking.ticketType}</td>
+                  <td>{booking.date}</td>
+                  <td>₦{Number(booking.totalAmount).toLocaleString()}</td>
+                  <td>
+                    <StatusBadge status={booking.status || "Pending"} />
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>

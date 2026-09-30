@@ -3,35 +3,8 @@ import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import Swal from "sweetalert2";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
-import { setUserDetails, updateToken, setLoading, setError, clearError } from "../redox/authSlice";
 import "../Styles/Signup.css";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-// Interceptors
-axios.interceptors.request.use(request => {
-  console.log('Starting Request:', request.url, request.data);
-  return request;
-});
-
-axios.interceptors.response.use(
-  response => {
-    console.log('Response:', response.status, response.data);
-    return response;
-  },
-  error => {
-    console.log('Full Error Object:', {
-      message: error.message,
-      response: error.response,
-      request: error.request,
-      config: error.config
-    });
-    return Promise.reject(error);
-  }
-);
 
 const signUpSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -49,8 +22,6 @@ const signUpSchema = z.object({
 const SignUp = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
-  const { loading: reduxLoading, error, isAuthenticated } = useSelector((state) => state.auth);
   
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -89,61 +60,11 @@ const SignUp = () => {
     }
   }, [bookingData]);
 
-  // ✅ Redirect after successful signup
-  useEffect(() => {
-    if (isAuthenticated) {
-      console.log("✅ User authenticated, checking for pending booking...");
-      
-      // Check for pending booking
-      const pendingBooking = bookingData || window._pendingBooking || localStorage.getItem('pendingBooking');
-      
-      if (pendingBooking) {
-        let booking;
-        if (typeof pendingBooking === 'string') {
-          try {
-            booking = JSON.parse(pendingBooking);
-          } catch (e) {
-            booking = pendingBooking;
-          }
-        } else {
-          booking = pendingBooking;
-        }
-        
-        console.log("📦 Pending booking found:", booking);
-        
-        // Clear the pending booking
-        localStorage.removeItem('pendingBooking');
-        window._pendingBooking = null;
-        
-        // Navigate to booking summary
-        if (booking.touristId && booking.packageId) {
-          console.log("➡️ Redirecting to booking summary");
-          navigate(`/booking-summary/${booking.touristId}/${booking.packageId}`, {
-            state: {
-              touristId: booking.touristId,
-              packageDetails: booking.packageDetails,
-              centreDetails: booking.centreDetails,
-            },
-            replace: true
-          });
-          return;
-        }
-      }
-      
-      // If no booking, navigate to the page they came from or home
-      console.log("➡️ No booking found, redirecting to:", from);
-      navigate(from, { replace: true });
-    }
-  }, [isAuthenticated, navigate, from, bookingData]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-    if (error) {
-      dispatch(clearError());
     }
   };
 
@@ -202,112 +123,35 @@ const SignUp = () => {
     setErrors({});
     setTermsError("");
     setLoadingState(true);
-    dispatch(setLoading(true));
-    dispatch(clearError());
-    
-    // Save to localStorage
-    localStorage.setItem("Name", formData.email);
-    
-    const userData = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      password: formData.password,
-    };
-    
-    try {
-      const response = await axios.post(`${API_BASE_URL}/client/register`, userData);
-      
-      console.log("API Response:", response.data);
-      
-      // Store token if received
-      if (response.data.token) {
-        dispatch(updateToken(response.data.token));
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("userToken", response.data.token);
-      }
-      
-      if (response.data.user) {
-        dispatch(setUserDetails(response.data.user));
-        // ✅ Store client ID in localStorage
-        const clientId = response.data.user.id || response.data.user._id;
-        if (clientId) {
-          localStorage.setItem('clientId', clientId);
+    // UI-only: no request is made. Show success and move on to email verification.
+    setLoadingState(false);
+    Swal.fire({
+      icon: "success",
+      title: "Account Created!",
+      text: "Your account has been created successfully. Please verify your email.",
+      confirmButtonColor: "#ff6b35",
+      confirmButtonText: "Verify Email"
+    }).then(() => {
+      navigate("/verify-email", {
+        state: {
+          email: formData.email,
+          from: from,
+          bookingData: bookingData || window._pendingBooking
         }
-      }
-      
-      Swal.fire({
-        icon: "success",
-        title: "Account Created!",
-        text: "Your account has been created successfully. Please verify your email.",
-        confirmButtonColor: "#ff6b35",
-        confirmButtonText: "Verify Email"
-      }).then(() => {
-        // Navigate to verify email with booking data
-        navigate("/verify-email", { 
-          state: { 
-            email: formData.email,
-            from: from,
-            bookingData: bookingData || window._pendingBooking
-          } 
-        });
       });
-      
-    } catch (error) {
-      console.error("Full error object:", error);
-      
-      let errorMessage = "Something went wrong. Please try again.";
-      
-      if (error.response) {
-        console.error("Error response data:", error.response.data);
-        errorMessage = error.response.data?.message || 
-                      error.response.data?.error || 
-                      `Server error: ${error.response.status}`;
-      } else if (error.request) {
-        console.error("No response received:", error.request);
-        errorMessage = "Cannot connect to server. Please check your connection.";
-      } else {
-        errorMessage = error.message;
-      }
-      
-      dispatch(setError(errorMessage));
-      
-      Swal.fire({
-        icon: "error",
-        title: "Signup Failed",
-        text: errorMessage,
-        confirmButtonColor: "#ff6b35",
-      });
-    } finally {
-      setLoadingState(false);
-      dispatch(setLoading(false));
-    }
+    });
   };
 
   return (
     <div className="signup_wrapper">
       <div className="signupBody">
         <div className="signupLeft">
-          <img src="" alt="Signup" />
+          <img src="/novaxcape/img.png" alt="Signup" />
         </div>
 
         <div className="signupRight">
           <form onSubmit={handleSubmit}>
             <h1 className="signupTitle">Sign Up</h1>
-
-            {error && (
-              <div className="error-message" style={{
-                color: "red",
-                textAlign: "center",
-                marginBottom: "15px",
-                padding: "10px",
-                backgroundColor: "#ffeeee",
-                borderRadius: "5px",
-                fontSize: "14px"
-              }}>
-                {error}
-              </div>
-            )}
 
             <div className="field">
               <label>Last Name</label>
@@ -395,8 +239,8 @@ const SignUp = () => {
             </div>
             {termsError && <span className="termsError">{termsError}</span>}
 
-            <button type="submit" className="signupBtn" disabled={loading || reduxLoading}>
-              {loading || reduxLoading ? "Creating Account..." : "Sign Up"}
+            <button type="submit" className="signupBtn" disabled={loading}>
+              {loading ? "Creating Account..." : "Sign Up"}
             </button>
 
             <div className="divider">
@@ -404,7 +248,7 @@ const SignUp = () => {
             </div>
 
             <button type="button" className="googleBtn">
-              <img src="" alt="Google" />
+              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" />
               Continue with Google
             </button>
 

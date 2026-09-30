@@ -4,7 +4,7 @@ const Reset = () => {
   return (
     <div className="image-holder">
       <img
-        src=""
+        src="/novaxcape/img.png"
         alt="Novaxcape"
       />
     </div>

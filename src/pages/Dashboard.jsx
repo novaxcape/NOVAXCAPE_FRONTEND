@@ -1,6 +1,4 @@
 // Dashboard.jsx
-import { useEffect, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { useOutletContext } from "react-router-dom";
 import TopNavbar from "../components/TopNavbar";
 import WelcomeSection from "../components/WelcomeSection";
@@ -10,233 +8,41 @@ import TicketDonutChart from "../components/TicketDonutChart";
 import RecentBookings from "../components/RecentBookings";
 import PerformanceInsight from "../components/PerformanceInsight";
 import CapacityGoals from "../components/CapacityGoals";
-import {
-  fetchDashboard,
-  fetchDashboardSuccess,
-  fetchDashboardFail,
-  clearDashboardError,
-  selectStats,
-  selectLoading,
-  selectError,
-  selectVendorName,
-  selectRequests,
-  selectRevenue,
-  selectBookings,
-  selectTicketTypes,
-  selectVisitorStats,
-  selectRatings,
-} from "../redox/dashboardSlice";
-import { logout } from "../redox/authSlice";
+
 import "../Styles/Dashboard.css";
 
-const API_URL =
-  import.meta.env.VITE_API_URL || "https://novaxcape.onrender.com/api/v1";
-
-const getAuthToken = (reduxToken) =>
-  localStorage.getItem("vendorToken") ||
-  reduxToken ||
-  localStorage.getItem("userToken") ||
-  localStorage.getItem("token");
-
-const DashboardLoadingState = () => (
-  <main className="dashboard-loading-shell" aria-busy="true">
-    <section className="dashboard-loading-welcome">
-      <div>
-        <span className="dashboard-skeleton dashboard-skeleton-title" />
-        <span className="dashboard-skeleton dashboard-skeleton-text" />
-      </div>
-      <span className="dashboard-skeleton dashboard-skeleton-button" />
-    </section>
-
-    <section className="dashboard-stats-grid dashboard-stats-grid--loading">
-      {Array.from({ length: 4 }).map((_, index) => (
-        <article className="dashboard-stat-card dashboard-stat-card--loading" key={index}>
-          <div className="stat-header">
-            <span className="dashboard-skeleton dashboard-skeleton-stat-title" />
-            <span className="dashboard-skeleton dashboard-skeleton-icon" />
-          </div>
-          <div className="stat-value-row">
-            <span className="dashboard-skeleton dashboard-skeleton-stat-value" />
-            <span className="dashboard-skeleton dashboard-skeleton-pill" />
-          </div>
-          <span className="dashboard-skeleton dashboard-skeleton-stat-foot" />
-        </article>
-      ))}
-    </section>
-
-    <section className="chart-section chart-section--loading">
-      <div className="chart-card dashboard-chart-card--loading">
-        <span className="dashboard-skeleton dashboard-skeleton-chart-title" />
-        <span className="dashboard-skeleton dashboard-skeleton-chart-subtitle" />
-        <div className="dashboard-skeleton-chart">
-          {Array.from({ length: 7 }).map((_, index) => (
-            <span
-              className="dashboard-skeleton-bar"
-              key={index}
-              style={{ height: `${36 + index * 8}%` }}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="ticket-chart dashboard-ticket-chart--loading">
-        <span className="dashboard-skeleton dashboard-skeleton-chart-title" />
-        <div className="dashboard-skeleton-donut-wrap">
-          <span className="dashboard-skeleton-donut" />
-          <div className="dashboard-skeleton-legend">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <span className="dashboard-skeleton dashboard-skeleton-legend-line" key={index} />
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section className="single-booking-container dashboard-bookings--loading">
-      <div className="booking-top-header">
-        <span className="dashboard-skeleton dashboard-skeleton-table-title" />
-        <span className="dashboard-skeleton dashboard-skeleton-table-link" />
-      </div>
-      <div className="dashboard-skeleton-table">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <span className="dashboard-skeleton dashboard-skeleton-table-row" key={index} />
-        ))}
-      </div>
-    </section>
-  </main>
-);
+// UI-only build: static sample data (no API calls)
+const SAMPLE_STATS = {
+  vendorName: "Lekki Conservation Centre",
+  requests: { today: 42, yesterday: 35 },
+  revenue: { today: 185000, yesterday: 160000 },
+  bookings: { today: 38, yesterday: 30, total: 1200 },
+  ratings: { average: 4.8, count: 567 },
+  ticketTypes: {
+    total: 88,
+    breakdown: [
+      { name: "Family Pack", value: 22, color: "#f4622a" },
+      { name: "Children Ticket", value: 25, color: "#0d2d6e" },
+      { name: "Adult Ticket", value: 35, color: "#a8d4e8" },
+      { name: "Total package", value: 8, color: "#1e1008" },
+    ],
+  },
+  visitorStats: [
+    { date: "Mon", visits: 32000 },
+    { date: "Tue", visits: 41000 },
+    { date: "Wed", visits: 38000 },
+    { date: "Thu", visits: 52000 },
+    { date: "Fri", visits: 61000 },
+    { date: "Sat", visits: 87000 },
+    { date: "Sun", visits: 74000 },
+  ],
+};
 
 const Dashboard = () => {
-  const dispatch = useDispatch();
   const { openMobileMenu = () => {} } = useOutletContext() || {};
 
-  const stats = useSelector(selectStats);
-  const loading = useSelector(selectLoading);
-  const error = useSelector(selectError);
-  const vendorName = useSelector(selectVendorName);
-  const requests = useSelector(selectRequests);
-  const revenue = useSelector(selectRevenue);
-  const bookings = useSelector(selectBookings);
-  const ticketTypes = useSelector(selectTicketTypes);
-  const visitorStats = useSelector(selectVisitorStats);
-  const ratings = useSelector(selectRatings);
-
-  const { userToken, isAuthenticated } = useSelector((state) => state.auth);
-
-  const fetchDashboardData = useCallback(async () => {
-    try {
-      const token = getAuthToken(userToken);
-
-      if (!isAuthenticated || !token) {
-        dispatch(fetchDashboardFail("Please login to view dashboard"));
-        return;
-      }
-
-      dispatch(fetchDashboard());
-
-      const response = await fetch(`${API_URL}/vendor/dashboard`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          dispatch(logout());
-          dispatch(fetchDashboardFail("Session expired. Please login again."));
-          return;
-        }
-
-        if (response.status === 404) {
-          dispatch(fetchDashboardFail("Vendor not found."));
-          return;
-        }
-
-        const errorData = await response.json();
-        dispatch(
-          fetchDashboardFail(
-            errorData.message || "Failed to fetch dashboard data",
-          ),
-        );
-        return;
-      }
-
-      const data = await response.json();
-
-      const dashboardData = {
-        ...data.data,
-        recentBookings: data.data.recentBookings || [], 
-      };
-
-      dispatch(fetchDashboardSuccess(dashboardData));
-    } catch (error) {
-      console.error("Dashboard fetch error:", error);
-      dispatch(
-        fetchDashboardFail(
-          error.message || "Network error. Please check your connection.",
-        ),
-      );
-    }
-  }, [dispatch, isAuthenticated, userToken]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchDashboardData();
-
-      // Optional: Auto-refresh every 5 minutes
-      const interval = setInterval(fetchDashboardData, 5 * 60 * 1000);
-      return () => {
-        clearInterval(interval);
-        dispatch(clearDashboardError());
-      };
-    }
-  }, [dispatch, isAuthenticated, fetchDashboardData]);
-
-  const handleRetry = () => {
-    dispatch(clearDashboardError());
-    fetchDashboardData();
-  };
-
-  if (loading) {
-    return (
-      <>
-        <div className="sticky-wrapper">
-          <TopNavbar onMenuOpen={openMobileMenu} />
-        </div>
-        <DashboardLoadingState />
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <div className="sticky-wrapper">
-          <TopNavbar onMenuOpen={openMobileMenu} />
-        </div>
-        <div className="dashboard-error">
-          <p style={{ color: "red" }}>Error: {error}</p>
-          <button onClick={handleRetry}>Retry</button>
-        </div>
-      </>
-    );
-  }
-
-  if (!stats) {
-    return (
-      <>
-        <div className="sticky-wrapper">
-          <TopNavbar onMenuOpen={openMobileMenu} />
-        </div>
-        <div className="dashboard-empty">
-          <p>No dashboard data available</p>
-          <button onClick={handleRetry}>Load Data</button>
-        </div>
-      </>
-    );
-  }
+  const { vendorName, requests, revenue, bookings, ratings, ticketTypes, visitorStats } =
+    SAMPLE_STATS;
 
   return (
     <>
@@ -294,8 +100,7 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* ✅ Fixed: Added fallback for recentBookings */}
-      <RecentBookings bookings={stats.recentBookings || []} />
+      <RecentBookings />
 
       <div className="bottom-section">
         {/* <PerformanceInsight

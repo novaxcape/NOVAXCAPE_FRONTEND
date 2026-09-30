@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import '../components/css/Ourgoal.css';
-const forest = "";
+import forest from "/novaxcape/forest.png";
 
 const Ourgoal = () => {
   const [activeTab, setActiveTab] = useState('vision');
@@ -53,7 +53,7 @@ const Ourgoal = () => {
       <div className="image-column">
         <div className="image-wrapper">
           <img 
-            src="" 
+            src={forest} 
             alt="Wooden bridge over a lush, green forest canopy" 
             className="side-image"
           />

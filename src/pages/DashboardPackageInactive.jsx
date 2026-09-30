@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import '../Styles/DashboardPackageInactive.css';
-// import "/novaxcape/dashlogo.png"
+import "/novaxcape/dashlogo.png"
 import { RiDashboardFill } from "react-icons/ri";
-const dashv = "";
+import dashv from "/novaxcape/dashv.png"
 
 
 export default function PackageSettings() {
@@ -32,7 +32,7 @@ export default function PackageSettings() {
         <div className="sidebar-brand">
           <span className="brand-logo">
             <img
-                src=""
+                src="/novaxcape/dashlogo.png"
                 alt="Novaxcape"
                 className="m-header-logo-img"
               />
@@ -97,7 +97,7 @@ export default function PackageSettings() {
               <span className="notification-dot"></span>
             </button>
             <div className="user-profile">
-              <img src="" alt="Admin avatar" className="user-avatar" />
+              <img src={dashv} alt="Admin avatar" className="user-avatar" />
               <div className="user-info">
                 <span className="user-name">Lekki CC</span>
                 <span className="user-role">Admin</span>

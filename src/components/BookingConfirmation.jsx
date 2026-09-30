@@ -1,56 +1,49 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
 import Swal from "sweetalert2";
 import { HiOutlineMail } from "react-icons/hi";
 import { FiMapPin, FiCalendar, FiShield, FiDownload } from "react-icons/fi";
 import { RiIdCardLine } from "react-icons/ri";
-import {
-  verifyPayment,
-  getBookingById,
-  getInstallmentPaymentStatus,
-  clearPaymentData,
-} from "../redox/apiSlice";
+
 import "./css/BookingConfirmation.css";
 
 const BookingConfirmation = () => {
   const { bookingId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
-  // Component State
-  const [bookingDetails, setBookingDetails] = useState({
-    location: '',
-    visitDate: '',
-    bookingId: bookingId || '',
-    passcode: '',
-    amount: 0,
-    status: 'pending',
-    reference: '',
-    // Installment-specific fields
-    isInstallment: false,
-    installmentsPaid: 0,
-    totalInstallments: 0,
-    amountPerInstallment: 0,
-    totalAmount: 0,
-  });
-  // 'verifying' | 'success' | 'partial-success' | 'pending' | 'failed'
-  const [verificationStatus, setVerificationStatus] = useState('verifying');
-  const [errorMessage, setErrorMessage] = useState('');
-
-  // Redux & Router State
+  // UI-only build: the confirmation is built from the booking state passed in
+  // navigation state by the payment step (no payment verification request).
   const locationBookingData = useMemo(() => location.state || {}, [location.state]);
-  const { paymentData, booking: reduxBooking } = useSelector((state) => state.api);
 
-  // Refs for tracking values inside useEffect without triggering re-renders
-  const paymentDataRef = useRef(paymentData);
-  const reduxBookingRef = useRef(reduxBooking);
-  const verificationAttempted = useRef(false);
+  const [bookingDetails] = useState(() => {
+    const data = location.state || {};
+    const centre = data.centreDetails || {};
+    const isInstallment = Boolean(data.booking?.isInstallment);
+    const totalAmount = Number(data.amount || 0);
+    const totalInstallments = isInstallment ? 2 : 0;
 
-  useEffect(() => { paymentDataRef.current = paymentData; }, [paymentData]);
-  useEffect(() => { reduxBookingRef.current = reduxBooking; }, [reduxBooking]);
+    return {
+      location:
+        [centre.centreName, centre.city].filter(Boolean).join(", ") ||
+        "Lekki Conservation Centre, Lagos",
+      visitDate: data.booking?.date || "",
+      bookingId: bookingId || data.bookingId || "",
+      passcode: String(Math.floor(100000 + Math.random() * 900000)),
+      amount: totalAmount,
+      status: "confirmed",
+      reference: data.reference || "",
+      isInstallment,
+      installmentsPaid: isInstallment ? 1 : 0,
+      totalInstallments,
+      amountPerInstallment: isInstallment ? Math.ceil(totalAmount / 2) : 0,
+      totalAmount,
+    };
+  });
 
+  // 'success' | 'partial-success' — installment bookings show the partial state
+  const verificationStatus = bookingDetails.isInstallment ? "partial-success" : "success";
+  const errorMessage = "";
   // Utility: Format Date
   const formatDate = (dateString) => {
     if (!dateString) return 'Date TBD';
@@ -72,187 +65,6 @@ const BookingConfirmation = () => {
     }
   };
 
-  // Utility: Update Booking State matching the new API Schema
-  const updateBookingDetails = (payload) => {
-    if (!payload) return;
-
-    const nestedData = payload.data || {};
-    const paymentDetails = nestedData.data || payload.payment || payload.paymentData || {};
-    const rootData = payload.data?.data ? payload.data : payload;
-    const pendingBookingState = JSON.parse(
-      localStorage.getItem("pendingBookingState") || "{}",
-    );
-
-    setBookingDetails((prev) => ({
-      ...prev,
-      location: rootData.location || nestedData.location || prev.location,
-      visitDate: rootData.visitDate || nestedData.visitDate || prev.visitDate,
-      bookingId: rootData.bookingId || nestedData.bookingId || prev.bookingId,
-      passcode: rootData.otp || rootData.passcode || nestedData.passcode || prev.passcode,
-
-      amount:
-        paymentDetails.amount ||
-        paymentDetails.totalAmount ||
-        nestedData.amount ||
-        nestedData.totalAmount ||
-        rootData.amount ||
-        rootData.totalAmount ||
-        pendingBookingState.amount ||
-        pendingBookingState.totalAmount ||
-        prev.amount,
-      status: paymentDetails.status || nestedData.status || rootData.status || prev.status,
-      reference:
-        paymentDetails.reference ||
-        nestedData.reference ||
-        rootData.reference ||
-        prev.reference,
-    }));
-  };
-
-  // Utility: Merge installment-status payload into bookingDetails
-  const updateInstallmentDetails = (installmentData) => {
-    if (!installmentData) return;
-    setBookingDetails((prev) => ({
-      ...prev,
-      isInstallment: true,
-      installmentsPaid: installmentData.installmentsPaid ?? prev.installmentsPaid,
-      totalInstallments: installmentData.totalInstallments ?? prev.totalInstallments,
-      amountPerInstallment: installmentData.amountPerInstallment ?? prev.amountPerInstallment,
-      totalAmount: installmentData.totalAmount ?? prev.totalAmount,
-      amount: installmentData.totalAmount ?? prev.amount,
-      bookingId: installmentData.bookingId || prev.bookingId,
-    }));
-  };
-
-  useEffect(() => {
-    if (verificationAttempted.current) return;
-    let isMounted = true;
-
-    const verifyAndFetchBooking = async () => {
-      verificationAttempted.current = true;
-
-      const urlParams = new URLSearchParams(location.search);
-      const reference =
-        urlParams.get('reference') ||
-        urlParams.get('trxref') ||
-        locationBookingData.reference ||
-        paymentDataRef.current?.reference ||
-        paymentDataRef.current?.data?.reference;
-
-      if (reference) {
-        try {
-          const result = await dispatch(verifyPayment({ reference, bookingId })).unwrap();
-
-          if (!isMounted) return;
-
-          // verifyPayment resolving (not throwing) means the payment call itself
-          // succeeded. We no longer trust a specific `message` string or a
-          // `status === 'success'` value here, because installment payments
-          // return different shapes/wording (e.g. "Installment 1 of 2 paid
-          // successfully", status: "installment"). Instead, we follow up with
-          // the installment-status endpoint to get the real, structured picture.
-          updateBookingDetails({
-            ...result,
-            status: 'confirmed',
-          });
-
-          try {
-            const installmentResult = await dispatch(
-              getInstallmentPaymentStatus(bookingId)
-            ).unwrap();
-
-            const statusData = installmentResult?.data || {};
-            const { installmentsPaid, totalInstallments, status } = statusData;
-
-            updateInstallmentDetails(statusData);
-
-            const isFullyPaid =
-              totalInstallments != null && installmentsPaid === totalInstallments;
-
-            if (isFullyPaid || status === 'confirmed' || status === 'completed') {
-              setVerificationStatus('success');
-              Swal.fire({
-                icon: 'success',
-                title: 'Payment Successful! 🎉',
-                text: 'Your booking has been confirmed.',
-                confirmButtonColor: '#ff6b35',
-                timer: 2000,
-                showConfirmButton: false,
-              });
-            } else if (installmentsPaid > 0) {
-              // Partial payment made, more installments remain
-              setVerificationStatus('partial-success');
-              Swal.fire({
-                icon: 'success',
-                title: `Installment ${installmentsPaid} of ${totalInstallments} Paid! 🎉`,
-                text: 'Your booking is in progress — pay the remaining installment to fully confirm.',
-                confirmButtonColor: '#ff6b35',
-                timer: 2500,
-                showConfirmButton: false,
-              });
-            } else {
-              // No installments recorded as paid despite verifyPayment succeeding —
-              // treat cautiously as failed rather than assuming success.
-              setVerificationStatus('failed');
-              setErrorMessage('Payment could not be confirmed. Please contact support if you were charged.');
-            }
-          } catch (installmentError) {
-            // If this is a one-off (non-installment) booking, the installment-status
-            // endpoint may 404 or return nothing meaningful — that's fine, since
-            // verifyPayment already resolved successfully. Treat as full success.
-            setVerificationStatus('success');
-            Swal.fire({
-              icon: 'success',
-              title: 'Payment Successful! 🎉',
-              text: 'Your booking has been confirmed.',
-              confirmButtonColor: '#ff6b35',
-              timer: 2000,
-              showConfirmButton: false,
-            });
-          }
-        } catch (error) {
-          if (isMounted) {
-            setVerificationStatus('failed');
-            setErrorMessage(typeof error === 'string' ? error : error?.message || 'Could not verify payment.');
-          }
-        }
-      } else {
-        // Fallback checks if no payment reference is found
-        try {
-          const existingBooking = locationBookingData.booking || reduxBookingRef.current;
-          const isExistingConfirmed = existingBooking && ['confirmed', 'completed'].includes(existingBooking.status) || existingBooking?.paymentStatus === 'success';
-
-          if (isExistingConfirmed) {
-            setVerificationStatus('success');
-            updateBookingDetails(existingBooking);
-          } else if (bookingId) {
-            const result = await dispatch(getBookingById(bookingId)).unwrap();
-            const fetchedBooking = result?.data || result?.booking || result;
-            const isFetchedConfirmed = fetchedBooking && ['confirmed', 'completed'].includes(fetchedBooking.status) || fetchedBooking?.paymentStatus === 'success';
-
-            if (isFetchedConfirmed) {
-              setVerificationStatus('success');
-              updateBookingDetails(fetchedBooking);
-            } else {
-              setVerificationStatus('pending');
-              updateBookingDetails(fetchedBooking || locationBookingData);
-            }
-          } else {
-            setVerificationStatus('pending');
-            updateBookingDetails(locationBookingData);
-          }
-        } catch (error) {
-          if (isMounted) {
-            setVerificationStatus('pending');
-            updateBookingDetails(locationBookingData);
-          }
-        }
-      }
-    };
-
-    verifyAndFetchBooking();
-    return () => { isMounted = false; };
-  }, [dispatch, bookingId, locationBookingData, location.search]);
 
   // Handlers
   const handleDownloadPasscode = () => {
@@ -291,7 +103,6 @@ const BookingConfirmation = () => {
   };
 
   const handleBackToHome = () => {
-    dispatch(clearPaymentData());
     navigate('/');
   };
 
@@ -330,19 +141,6 @@ const BookingConfirmation = () => {
   };
 
   // UI Renders based on verification status
-  if (verificationStatus === 'verifying') {
-    return (
-      <div className="confirmation-page-wrapper">
-        <div className="confirmation-card">
-          <div className="loading-container">
-            <div className="spinner"></div>
-            <h2 className="confirmation-title">Verifying Payment...</h2>
-            <p className="confirmation-subtitle">Please wait while we confirm your transaction.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (verificationStatus === 'failed') {
     return (
@@ -427,7 +225,7 @@ const BookingConfirmation = () => {
     <div className="confirmation-page-wrapper">
       <div className="confirmation-card">
         <div className="success-badge-container">
-          <img src="" alt="Booking Confirmed" className="success-checkmark-img" />
+          <img src="/novaxcape/check.png" alt="Booking Confirmed" className="success-checkmark-img" />
         </div>
 
         <h1 className="confirmation-title">Booking Confirmed!</h1>

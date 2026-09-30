@@ -81,7 +81,7 @@ const Trusted = () => {
             <div className="trusted-card" key={`${currentSet}-${index}`}>
               <div className="trusted-card-header">
                 <img
-                  src=""
+                  src={card.image}
                   alt={card.name}
                   className="trusted-avatar"
                 />

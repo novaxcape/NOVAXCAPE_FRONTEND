@@ -1,22 +1,15 @@
 // components/TopNavbar.jsx
 import { useState, useRef, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { FiBell, FiChevronDown, FiSearch, FiMenu } from "react-icons/fi";
-import { logout } from "../redox/authSlice";
 import "../Styles/Dashboard.css";
 
 const TopNavbar = ({ onMenuOpen = () => {} }) => {
-  const dispatch = useDispatch();
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const notifRef = useRef(null);
   
-  // Get vendor name from Redux state instead of localStorage
-  const { loggedInUser, isVendor } = useSelector((state) => state.auth);
-  const vendorName = isVendor 
-    ? loggedInUser?.vendorName || loggedInUser?.name || "Vendor" 
-    : "Guest";
-
+  // UI-only build: static placeholder name
+  const vendorName = "Vendor";
   // Handle click outside for notifications
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -28,9 +21,7 @@ const TopNavbar = ({ onMenuOpen = () => {} }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Handle logout using Redux action
   const handleLogout = () => {
-    dispatch(logout());
     window.location.href = "/signinscreen";
   };
 
@@ -41,7 +32,7 @@ const TopNavbar = ({ onMenuOpen = () => {} }) => {
       </div>
 
       <div className="navbar-mobile1-logo">
-        <img src="" alt="Novaxcape" />
+        <img src="/novaxcape/logo.png" alt="Novaxcape" />
       </div>
 
       <div className="search-bar">
@@ -79,7 +70,7 @@ const TopNavbar = ({ onMenuOpen = () => {} }) => {
         </div>
 
         <div className="profile">
-          <img src="" alt="Admin" />
+          <img src="/novaxcape/profile.png" alt="Admin" />
           <div className="profile-info">
             <span className="profile-name">{vendorName}</span>
             <span className="profile-role">Admin</span>

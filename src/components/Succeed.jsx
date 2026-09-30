@@ -84,7 +84,7 @@ const Succeed = () => {
 
       <div className="success-portrait-center-container">
         <img 
-          src="" 
+          src="/novaxcape/succeed.png" 
           alt="Successful Partner Illustration" 
           className="portrait-model-image" 
         />

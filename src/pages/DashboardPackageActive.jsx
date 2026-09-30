@@ -76,7 +76,7 @@ export default function PackageSettings() {
             </div>
             <div className="user-profile">
               <img 
-                src="" 
+                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" 
                 alt="Admin Profile" 
                 className="avatar" 
               />

@@ -1,92 +1,36 @@
 // Pages/VendorCenters.jsx
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { getVendorAllCentres, deleteTouristCenter } from '../redox/apiSlice';
 import '../Styles/VendorCenters.css';
 
+// UI-only build: static sample data (no API calls)
+const SAMPLE_CENTERS = [
+  {
+    id: 'sample-1',
+    centreName: 'Lekki Conservation Centre',
+    city: 'Lagos',
+    description: 'A nature reserve with the longest canopy walkway in Africa.',
+    openingHours: '8:30 AM - 5:00 PM',
+    dailySlotCapacity: 1200,
+    installmentPayment: true,
+    imagesPublicUrl: ['/novaxcape/lekki.png'],
+  },
+  {
+    id: 'sample-2',
+    centreName: 'Olumo Rock',
+    city: 'Abeokuta',
+    description: 'A historic rock formation with caves, shrines and panoramic views.',
+    openingHours: '9:00 AM - 6:00 PM',
+    dailySlotCapacity: 800,
+    installmentPayment: false,
+    imagesPublicUrl: ['/novaxcape/olumo.png'],
+  },
+];
+
 const VendorCenters = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  
-  const { 
-    userToken, 
-    isVendor, 
-    isAuthenticated 
-  } = useSelector((state) => state.auth);
-  
-  const { 
-    vendorCentres, 
-    touristCentresLoading,
-    touristCentresError 
-  } = useSelector((state) => state.api);
-  
-  const [centers, setCenters] = useState([]);
-
-  useEffect(() => {
-    if (!isAuthenticated || !isVendor || !userToken) {
-      navigate('/vendor/login');
-    }
-  }, [isAuthenticated, isVendor, userToken, navigate]);
-
-  useEffect(() => {
-    if (vendorCentres && vendorCentres.length > 0) {
-      console.log('✅ Using centres from Redux:', vendorCentres);
-      setCenters(vendorCentres);
-      localStorage.setItem("vendorCenterCount", vendorCentres.length);
-      localStorage.setItem("hasCentre", "true");
-      
-      const firstCentre = vendorCentres[0];
-      const centreId = firstCentre?.id || firstCentre?._id;
-      if (centreId) {
-        localStorage.setItem("centreId", centreId);
-        localStorage.setItem("selectedCentreId", centreId);
-      }
-    }
-  }, [vendorCentres]);
-
-  useEffect(() => {
-    if (isAuthenticated && isVendor && userToken) {
-      if (!vendorCentres || vendorCentres.length === 0) {
-        fetchVendorCenters();
-      }
-    }
-  }, [userToken, vendorCentres]);
-
-  const fetchVendorCenters = async () => {
-    try {
-      console.log('📄 Fetching vendor centers using GET /tourist/get-all...');
-      const result = await dispatch(getVendorAllCentres()).unwrap();
-      
-      const centres = result?.data || [];
-      setCenters(centres);
-      localStorage.setItem("vendorCenterCount", centres.length);
-      
-      if (centres.length > 0) {
-        localStorage.setItem("hasCentre", "true");
-        const firstCentre = centres[0];
-        const centreId = firstCentre?.id || firstCentre?._id;
-        if (centreId) {
-          localStorage.setItem("centreId", centreId);
-          localStorage.setItem("selectedCentreId", centreId);
-        }
-      }
-      
-      console.log(`✅ Loaded ${centres.length} centers`);
-    } catch (error) {
-      console.error('❌ Error fetching centers:', error);
-      
-      if (error !== "No centres found. Create your first centre.") {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error Loading Centers',
-          text: error || 'Failed to load your centers.',
-          confirmButtonColor: '#ff6b35',
-        });
-      }
-    }
-  };
+  const [centers, setCenters] = useState(SAMPLE_CENTERS);
 
   const handleDeleteCenter = async (centerId, centerName) => {
     const result = await Swal.fire({
@@ -100,32 +44,20 @@ const VendorCenters = () => {
     });
 
     if (result.isConfirmed) {
-      try {
-        await dispatch(deleteTouristCenter(centerId)).unwrap();
-        await fetchVendorCenters();
-        
-        Swal.fire({
-          icon: 'success',
-          title: 'Deleted!',
-          text: 'Center has been deleted successfully.',
-          timer: 1500,
-          showConfirmButton: false,
-        });
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Delete Failed',
-          text: error || 'Failed to delete center.',
-          confirmButtonColor: '#ff6b35',
-        });
-      }
+      setCenters((prev) => prev.filter((c) => (c.id || c._id) !== centerId));
+      Swal.fire({
+        icon: 'success',
+        title: 'Deleted!',
+        text: 'Center has been deleted successfully.',
+        timer: 1500,
+        showConfirmButton: false,
+      });
     }
   };
 
   const handleRefresh = () => {
-    fetchVendorCenters();
+    setCenters(SAMPLE_CENTERS);
   };
-
   const handleSelectCentre = (center) => {
     const id = center.id || center._id;
     localStorage.setItem("selectedCentreId", id);
@@ -139,26 +71,6 @@ const VendorCenters = () => {
     });
   };
 
-  if (touristCentresLoading) {
-    return (
-      <div className="loading-container">
-        <div className="loader"></div>
-        <p>Loading your centers...</p>
-      </div>
-    );
-  }
-
-  if (touristCentresError && touristCentresError !== "No centres found. Create your first centre.") {
-    return (
-      <div className="error-container">
-        <h3>Error Loading Centers</h3>
-        <p>{touristCentresError}</p>
-        <button onClick={handleRefresh} className="refresh-btn">
-          Try Again
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="vendor-centers-container">
@@ -175,7 +87,6 @@ const VendorCenters = () => {
           <button 
             className="refresh-btn" 
             onClick={handleRefresh}
-            disabled={touristCentresLoading}
           >
             🔄 Refresh
           </button>
@@ -213,7 +124,7 @@ const VendorCenters = () => {
                 <div className="center-image">
                   {imageUrl ? (
                     <img 
-                      src="" 
+                      src={imageUrl} 
                       alt={name}
                       onError={(e) => {
                         e.target.src = '/novaxcape/default-center.jpg';

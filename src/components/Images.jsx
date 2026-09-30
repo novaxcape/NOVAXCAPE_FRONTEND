@@ -145,7 +145,7 @@ const Images = ({ uploadedImages, onImagesChange, onValidationChange }) => {
             {imageData ? (
               <div className="upload-preview">
                 <img
-                  src=""
+                  src={imageData.previewUrl}
                   alt={`Upload preview ${i}`}
                   className="preview-image"
                 />

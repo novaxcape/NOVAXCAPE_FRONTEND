@@ -1,31 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import TopNavbar2 from "../components/TopNavbar2";
-import { useDispatch, useSelector } from "react-redux";
 import Swal from "sweetalert2";
 import { FaEyeSlash, FaSave, FaEye } from "react-icons/fa";
 import "../Styles/Setting.css";
-import {
-  updateVendorProfile,
-  getVendorDetails,
-  changeVendorPassword,
-  clearVendorError,
-  clearVendorSuccess
-} from "../redox/apiSlice";
 
 const SettingsPage = () => {
   const { openMobileMenu = () => {} } = useOutletContext() || {};
-  const dispatch = useDispatch();
-  const { vendorProfile, vendorLoading, vendorError, vendorSuccessMessage } = useSelector((state) => state.api);
-  const { vendorDetails } = useSelector((state) => state.auth);
-
+  // UI-only build: static sample profile (no API calls)
   const [businessData, setBusinessData] = useState({
-    businessName: "",
-    address: "",
-    phoneNumber: "",
-    email: ""
+    businessName: "Lekki Conservation Centre",
+    address: "Lekki-Epe Expressway, Lagos",
+    phoneNumber: "08012345678",
+    email: "vendor@example.com"
   });
-
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -38,57 +26,6 @@ const SettingsPage = () => {
     confirm: false
   });
 
-  // Load vendor profile data
-  useEffect(() => {
-    if (!vendorProfile) {
-      dispatch(getVendorDetails());
-    }
-  }, [dispatch, vendorProfile]);
-
-  // Populate form when profile data is available
-  useEffect(() => {
-    if (vendorProfile) {
-      setBusinessData({
-        businessName: vendorProfile.businessName || vendorProfile.business_name || vendorProfile.name || "",
-        address: vendorProfile.address || vendorProfile.businessAddress || "",
-        phoneNumber: vendorProfile.phoneNumber || vendorProfile.phone || vendorDetails?.phone || "",
-        email: vendorProfile.email || vendorDetails?.email || ""
-      });
-    } else if (vendorDetails) {
-      setBusinessData({
-        businessName: vendorDetails.businessName || vendorDetails.business_name || vendorDetails.name || "",
-        address: vendorDetails.address || vendorDetails.businessAddress || "",
-        phoneNumber: vendorDetails.phoneNumber || vendorDetails.phone || "",
-        email: vendorDetails.email || ""
-      });
-    }
-  }, [vendorProfile, vendorDetails]);
-
-  // Handle success/error messages
-  useEffect(() => {
-    if (vendorSuccessMessage) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: vendorSuccessMessage,
-        timer: 3000,
-        showConfirmButton: false
-      });
-      dispatch(clearVendorSuccess());
-    }
-  }, [vendorSuccessMessage, dispatch]);
-
-  useEffect(() => {
-    if (vendorError) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: vendorError,
-        confirmButtonColor: '#ff6b35'
-      });
-      dispatch(clearVendorError());
-    }
-  }, [vendorError, dispatch]);
 
   const handleBusinessChange = (e) => {
     const { name, value } = e.target;
@@ -104,24 +41,17 @@ const SettingsPage = () => {
     setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
   };
 
-  const handleBusinessSubmit = async (e) => {
+  const handleBusinessSubmit = (e) => {
     e.preventDefault();
-
-    const formData = new FormData();
-    formData.append('businessName', businessData.businessName);
-    formData.append('address', businessData.address);
-    formData.append('phoneNumber', businessData.phoneNumber);
-    formData.append('email', businessData.email);
-
-    try {
-      await dispatch(updateVendorProfile(formData)).unwrap();
-      dispatch(getVendorDetails()); // Refresh data
-    } catch (error) {
-      console.error('Update error:', error);
-    }
+    Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: 'Business information saved.',
+      timer: 3000,
+      showConfirmButton: false
+    });
   };
-
-  const handlePasswordSubmit = async (e) => {
+  const handlePasswordSubmit = (e) => {
     e.preventDefault();
 
     // Validate passwords
@@ -155,47 +85,28 @@ const SettingsPage = () => {
       return;
     }
 
-    try {
-      await dispatch(changeVendorPassword({
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword
-      })).unwrap();
+    Swal.fire({
+      icon: 'success',
+      title: 'Password Updated',
+      text: 'Your password has been changed.',
+      timer: 3000,
+      showConfirmButton: false
+    });
 
-      // Clear password fields
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: ""
-      });
-
-    } catch (error) {
-      console.error('Password change error:', error);
-    }
+    setPasswordData({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: ""
+    });
   };
-
-  const handleSaveAllChanges = async () => {
-    // Save business info
-    const formData = new FormData();
-    formData.append('businessName', businessData.businessName);
-    formData.append('address', businessData.address);
-    formData.append('phoneNumber', businessData.phoneNumber);
-    // formData.append('email', businessData.email);
-
-    try {
-      await dispatch(updateVendorProfile(formData)).unwrap();
-      dispatch(getVendorDetails());
-
-      Swal.fire({
-        icon: 'success',
-        title: 'All Changes Saved!',
-        text: 'Your settings have been updated successfully.',
-        confirmButtonColor: '#ff6b35'
-      });
-    } catch (error) {
-      console.error('Save error:', error);
-    }
+  const handleSaveAllChanges = () => {
+    Swal.fire({
+      icon: 'success',
+      title: 'All Changes Saved!',
+      text: 'Your settings have been updated successfully.',
+      confirmButtonColor: '#ff6b35'
+    });
   };
-
   return (
     <>
     <div className="sticky-wrapper">
@@ -257,8 +168,8 @@ const SettingsPage = () => {
           />
         </div> */}
 
-        <button type="submit" className="orange-btn" disabled={vendorLoading}>
-          {vendorLoading ? "Saving..." : "Update Business Info"}
+        <button type="submit" className="orange-btn">
+          Update Business Info
         </button>
       </form>
 
@@ -330,8 +241,8 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        <button type="submit" className="orange-btn" disabled={vendorLoading}>
-          {vendorLoading ? "Changing..." : "Change Password"}
+        <button type="submit" className="orange-btn">
+          Change Password
         </button>
       </form>
 

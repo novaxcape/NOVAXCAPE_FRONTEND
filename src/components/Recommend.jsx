@@ -8,7 +8,7 @@ const Recommend = () => {
         <div className="recommend_content">
           <div className="recommend_left">
             <img
-              src=""
+              src="/novaxcape/Recommendbg.png"
               alt="recommend"
             />
           </div>

@@ -9,12 +9,12 @@ const Aboutsection = () => {
       <div className="about-container">
         <div className="about-images">
           <div className="left-column">
-            <img src="" alt="Volunteer" className="medium-image" />
-            <img src="" alt="Volunteer" className="small-image" />
+            <img src="/novaxcape/img1.png" alt="Volunteer" className="medium-image" />
+            <img src="/novaxcape/img2.png" alt="Volunteer" className="small-image" />
           </div>
 
           <div className="right-column">
-            <img src="" alt="Group" className="large-image" />
+            <img src="/novaxcape/img3.png" alt="Group" className="large-image" />
           </div>
         </div>
 

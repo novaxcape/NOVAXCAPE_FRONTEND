@@ -1,16 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import axios from "axios";
 import "../Styles/Login.css";
 import Image from "../components/Image";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://novaxcape.onrender.com/api/v1";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
@@ -18,7 +14,7 @@ const ForgotPassword = () => {
     if (error) setError("");
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     // Validation
@@ -33,43 +29,15 @@ const ForgotPassword = () => {
       return;
     }
     
-    setLoading(true);
-    setError("");
-    
-    try {
-      // API CALL to send OTP
-      const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, {
-        email: email,
-      });
-      
-      console.log("Forgot password response:", response.data);
-      
-      Swal.fire({
-        icon: "success",
-        title: "OTP Sent!",
-        text: "A verification code has been sent to your email.",
-        confirmButtonColor: "#ff6b35",
-      });
-      
-      // Navigate to verification code page with email
-      navigate("/verify-email", { state: { email: email, type: "reset" } });
-      
-    } catch (error) {
-      console.error("Forgot password error:", error.response?.data);
-      const errorMessage = error.response?.data?.message || "Failed to send OTP. Please try again.";
-      setError(errorMessage);
-      
-      Swal.fire({
-        icon: "error",
-        title: "Failed",
-        text: errorMessage,
-        confirmButtonColor: "#ff6b35",
-      });
-    } finally {
-      setLoading(false);
-    }
+    // UI-only: no request is made.
+    Swal.fire({
+      icon: "success",
+      title: "OTP Sent!",
+      text: "A verification code has been sent to your email.",
+      confirmButtonColor: "#ff6b35",
+    });
+    navigate("/verify-email", { state: { email: email, type: "reset" } });
   };
-
   return (
     <div className="login-wrapper">
       <div className="login-container">
@@ -107,7 +75,6 @@ const ForgotPassword = () => {
                 placeholder="Enter your Email"
                 value={email}
                 onChange={handleChange}
-                disabled={loading}
                 required
                 style={{
                   width: "100%",
@@ -122,10 +89,8 @@ const ForgotPassword = () => {
             <button 
               type="submit" 
               className="signup-btn" 
-              disabled={loading}
-              style={{ opacity: loading ? 0.7 : 1 }}
             >
-              {loading ? "Sending..." : "Next"}
+              Next
             </button>
           </form>
         </div>

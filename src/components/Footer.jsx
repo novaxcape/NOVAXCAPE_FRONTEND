@@ -11,7 +11,7 @@ const Footer = () => {
         <div className="footer-brand-section">
           <div className="footer-logo-wrapper">
             <img
-              src=""
+              src="/novaxcape/logo.png"
               alt="Novaxcape"
               className="footer-logo-img"
             />

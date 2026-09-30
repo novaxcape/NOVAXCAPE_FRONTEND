@@ -39,7 +39,7 @@ const PaymentHeader = () => {
         <div className="p-navbar-logo-wrapper">
           <Link to="/">
             <img
-              src=""
+              src="/novaxcape/logo.png"
               alt="novaxcape"
               className="p-navbar-brand-logo"
             />

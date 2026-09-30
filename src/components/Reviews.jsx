@@ -1,10 +1,7 @@
 // File: src/components/Reviews.jsx
 
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
 import { PiSliders } from "react-icons/pi";
-import { createReview } from "../redox/apiSlice";
 import "./css/Reviews.css";
 
 const reviewsData = [
@@ -71,15 +68,7 @@ const StarInput = ({ value, onChange }) => {
   );
 };
 
-const Reviews = ({ touristCentreId: propTouristCentreId }) => {
-  const dispatch = useDispatch();
-  
-  // Try to get ID from props first, then from URL params as fallback
-  const params = useParams();
-  const touristCentreId = propTouristCentreId || params.touristCentreId;
-  
-  const { reviewsLoading } = useSelector((state) => state.api);
-
+const Reviews = () => {
   const overallRating = 4.8;
   const totalReviews = 110;
 
@@ -98,7 +87,7 @@ const Reviews = ({ touristCentreId: propTouristCentreId }) => {
   const [submitMsg, setSubmitMsg] = useState("");
   const [submitError, setSubmitError] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitMsg("");
     setSubmitError("");
@@ -116,52 +105,14 @@ const Reviews = ({ touristCentreId: propTouristCentreId }) => {
       return;
     }
 
-    // Check if touristCentreId exists
-    if (!touristCentreId) {
-      setSubmitError("Error: Tourist centre ID is missing. Please go back and try again.");
-      return;
-    }
+    // UI-only build: the review is not sent anywhere.
+    setSubmitMsg("Thank you! Your review has been submitted. 🎉");
 
-    try {
-      console.log("📤 Submitting review for centre:", touristCentreId);
-      console.log("📤 Form data:", {
-        ratings: String(formRating),
-        fullName: formName.trim(),
-        email: formEmail.trim(),
-        addYourReview: formReview.trim(),
-      });
-
-      // ✅ CORRECT: Pass touristCentreId and reviewData as an object
-      await dispatch(
-        createReview({
-          touristCentreId: touristCentreId,
-          reviewData: {
-            ratings: String(formRating),
-            fullName: formName.trim(),
-            email: formEmail.trim(),
-            addYourReview: formReview.trim(),
-          }
-        })
-      ).unwrap();
-
-      setSubmitMsg("Thank you! Your review has been submitted. 🎉");
-      
-      // Reset form
-      setFormRating(0);
-      setFormName("");
-      setFormEmail("");
-      setFormReview("");
-      
-    } catch (error) {
-      console.error("❌ Review submission error:", error);
-      setSubmitError(
-        typeof error === "string"
-          ? error
-          : error?.message || "Failed to submit review. Please try again."
-      );
-    }
+    setFormRating(0);
+    setFormName("");
+    setFormEmail("");
+    setFormReview("");
   };
-
   return (
     <div className="reviews-page">
       <h1 className="reviews-page__title">View all reviews and add yours</h1>
@@ -210,7 +161,7 @@ const Reviews = ({ touristCentreId: propTouristCentreId }) => {
                 <div className="reviews-feedback-card__header">
                   <div className="reviews-feedback-card__user">
                     <img
-                      src=""
+                      src={review.avatar}
                       alt={review.name}
                       className="reviews-feedback-card__avatar"
                     />
@@ -243,7 +194,6 @@ const Reviews = ({ touristCentreId: propTouristCentreId }) => {
               placeholder="Enter your Name"
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
-              disabled={reviewsLoading}
             />
 
             <label className="reviews-form__label" htmlFor="reviews-email">
@@ -256,7 +206,6 @@ const Reviews = ({ touristCentreId: propTouristCentreId }) => {
               placeholder="Enter your Email"
               value={formEmail}
               onChange={(e) => setFormEmail(e.target.value)}
-              disabled={reviewsLoading}
             />
 
             <label className="reviews-form__label" htmlFor="reviews-review">
@@ -268,7 +217,6 @@ const Reviews = ({ touristCentreId: propTouristCentreId }) => {
               placeholder="Type here"
               value={formReview}
               onChange={(e) => setFormReview(e.target.value)}
-              disabled={reviewsLoading}
             />
 
             {/* Success / Error Messages */}
@@ -282,9 +230,8 @@ const Reviews = ({ touristCentreId: propTouristCentreId }) => {
             <button 
               type="submit" 
               className="reviews-form__submit"
-              disabled={reviewsLoading}
             >
-              {reviewsLoading ? "Submitting..." : "Add Review"}
+              Add Review
             </button>
           </form>
         </div>

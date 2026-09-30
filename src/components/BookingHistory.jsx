@@ -1,12 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./css/BookingHistory.css";
 import { FiSearch, FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
-import { getAllClientBookings, clearApiError } from "../redox/apiSlice";
+
+// UI-only build: static sample data (no API calls)
+const SAMPLE_BOOKINGS = [
+  { id: "bk-10001", bookingNumber: "NOV-10001", packageName: "Adult Ticket", centreName: "Lekki Conservation Centre", visitDate: "2026-10-12", amount: 5000, status: "confirmed" },
+  { id: "bk-10002", bookingNumber: "NOV-10002", packageName: "Family Pack", centreName: "Olumo Rock", visitDate: "2026-10-18", amount: 7500, status: "pending" },
+  { id: "bk-10003", bookingNumber: "NOV-10003", packageName: "Children Ticket", centreName: "Mapo Hall", visitDate: "2026-09-02", amount: 1500, status: "completed" },
+  { id: "bk-10004", bookingNumber: "NOV-10004", packageName: "Adult Ticket", centreName: "Yankari Game Reserve", visitDate: "2026-11-05", amount: 12000, status: "installment" },
+  { id: "bk-10005", bookingNumber: "NOV-10005", packageName: "Adult Ticket", centreName: "Obudu Mountain Resort", visitDate: "2026-08-21", amount: 9000, status: "cancelled" },
+  { id: "bk-10006", bookingNumber: "NOV-10006", packageName: "Family Pack", centreName: "Green Legacy Resort", visitDate: "2026-12-01", amount: 15000, status: "confirmed" },
+];
 
 const BookingHistory = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -14,21 +21,8 @@ const BookingHistory = () => {
   const [selectedBooking, setSelectedBooking] = useState(null); // NEW: booking shown in popup
   const itemsPerPage = 5;
 
-  const { clientBookings, bookingLoading, bookingError } = useSelector(
-    (state) => state.api
-  );
-  const { isAuthenticated } = useSelector((state) => state.auth);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      dispatch(getAllClientBookings());
-    }
-    return () => {
-      dispatch(clearApiError());
-    };
-  }, [dispatch, isAuthenticated]);
-
-  // Map API data to display format
+  // Map sample data to display format
   const mapBookingsToDisplay = (bookings) => {
     if (!bookings || bookings.length === 0) return [];
 
@@ -44,7 +38,7 @@ const BookingHistory = () => {
     }));
   };
 
-  const displayBookings = mapBookingsToDisplay(clientBookings);
+  const displayBookings = mapBookingsToDisplay(SAMPLE_BOOKINGS);
 
   // Filter and search bookings
   const filteredBookings = displayBookings.filter((booking) => {
@@ -126,32 +120,6 @@ const BookingHistory = () => {
     return statuses;
   };
 
-  if (bookingLoading) {
-    return (
-      <div className="history-page-wrapper">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Loading your bookings...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (bookingError) {
-    return (
-      <div className="history-page-wrapper">
-        <div className="error-container">
-          <p className="error-text">{bookingError}</p>
-          <button
-            className="retry-btn"
-            onClick={() => dispatch(getAllClientBookings())}
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="history-page-wrapper">
@@ -200,7 +168,7 @@ const BookingHistory = () => {
 
       {filteredBookings.length === 0 ? (
         <div className="empty-bookings-container">
-          <img src="" alt="No bookings" />
+          <img src="/novaxcape/no-bookings.png" alt="No bookings" />
           <h3>No Bookings Found</h3>
           <p>
             {searchTerm || filterStatus !== "all"

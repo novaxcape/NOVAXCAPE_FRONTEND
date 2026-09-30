@@ -1,16 +1,22 @@
 // Pages/Passcode.jsx
 import React, { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { verifyPasscode } from '../redox/apiSlice';
 import Swal from 'sweetalert2';
 import './css/Passcode.css';
 
+// UI-only build: no verification request. "000000" simulates an invalid code,
+// any other 6-digit code returns this sample booking.
+const SAMPLE_BOOKING = {
+  bookingNumber: 'BK-20261001',
+  customerName: 'Ada Okafor',
+  packageName: 'Adult Ticket',
+  amount: 5000,
+  visitDate: '12 Oct 2026',
+};
+
 const Passcode = () => {
-  const dispatch = useDispatch();
   const [passcode, setPasscode] = useState([]);
   const [verificationStatus, setVerificationStatus] = useState('idle'); // 'idle', 'success', 'failed'
   const [bookingData, setBookingData] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [responseMessage, setResponseMessage] = useState('');
 
@@ -30,110 +36,37 @@ const Passcode = () => {
     }
   };
 
-  const handleVerify = async () => {
-    if (passcode.length === 6) {
-      const codeString = passcode.join('');
-      setLoading(true);
-      setError('');
-      setResponseMessage('');
+  const handleVerify = () => {
+    if (passcode.length !== 6) return;
 
-      try {
-        const result = await dispatch(verifyPasscode({ passcode: codeString })).unwrap();
+    const codeString = passcode.join('');
+    setError('');
+    setResponseMessage('');
 
-        console.log('✅ Full API Response:', result);
-        console.log('✅ Response type:', typeof result);
-        console.log('✅ Response keys:', result ? Object.keys(result) : 'null');
-
-        const responseMessage = result?.message || '';
-
-        if (responseMessage === 'Invalid passcode') {
-          setVerificationStatus('failed');
-          setError('Invalid passcode. Please try again.');
-
-          Swal.fire({
-            icon: 'error',
-            title: 'Verification Failed',
-            text: 'Invalid passcode. Please check and try again.',
-            confirmButtonColor: '#ff6b35',
-          });
-        } else if (result?.data || result?.booking) {
-          const booking = result?.data || result?.booking || result;
-          setBookingData(booking);
-          setVerificationStatus('success');
-          setResponseMessage(responseMessage || 'Passcode verified successfully!');
-
-          Swal.fire({
-            icon: 'success',
-            title: 'Passcode Verified!',
-            text: 'Customer is cleared for entry.',
-            confirmButtonColor: '#ff6b35',
-            timer: 3000,
-            timerProgressBar: true,
-          });
-        } else if (result && typeof result === 'object' && Object.keys(result).length > 0) {
-          setBookingData(result);
-          setVerificationStatus('success');
-          setResponseMessage(responseMessage || 'Passcode verified successfully!');
-
-          Swal.fire({
-            icon: 'success',
-            title: 'Passcode Verified!',
-            text: 'Customer is cleared for entry.',
-            confirmButtonColor: '#ff6b35',
-            timer: 3000,
-            timerProgressBar: true,
-          });
-        } else {
-          setVerificationStatus('failed');
-          setError('Unexpected response from server.');
-
-          Swal.fire({
-            icon: 'error',
-            title: 'Verification Failed',
-            text: 'Unexpected response from server. Please try again.',
-            confirmButtonColor: '#ff6b35',
-          });
-        }
-      } catch (error) {
-        console.error('❌ Passcode verification failed:', error);
-        console.error('❌ Error type:', typeof error);
-        console.error('❌ Error value:', error);
-
-        let errorMessage = 'Invalid passcode. Please try again.';
-
-        if (typeof error === 'string') {
-          if (error.includes('Invalid passcode')) {
-            errorMessage = 'Invalid passcode. Please check and try again.';
-          } else if (error.includes('Passcode is required')) {
-            errorMessage = 'Please enter a passcode.';
-          } else {
-            errorMessage = error;
-          }
-        } else if (error?.message) {
-          if (error.message.includes('Invalid passcode')) {
-            errorMessage = 'Invalid passcode. Please check and try again.';
-          } else {
-            errorMessage = error.message;
-          }
-        } else if (error?.response?.data?.message) {
-          errorMessage = error.response.data.message;
-        }
-
-        setError(errorMessage);
-        setVerificationStatus('failed');
-
-        Swal.fire({
-          icon: 'error',
-          title: 'Verification Failed',
-          text: errorMessage,
-          confirmButtonColor: '#ff6b35',
-        });
-      } finally {
-        setLoading(false);
-      }
+    if (codeString === '000000') {
+      setVerificationStatus('failed');
+      setError('Invalid passcode. Please try again.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Verification Failed',
+        text: 'Invalid passcode. Please check and try again.',
+        confirmButtonColor: '#ff6b35',
+      });
+      return;
     }
-  };
 
+    setBookingData(SAMPLE_BOOKING);
+    setVerificationStatus('success');
+    setResponseMessage('Passcode verified successfully!');
+    Swal.fire({
+      icon: 'success',
+      title: 'Passcode Verified!',
+      text: 'Customer is cleared for entry.',
+      confirmButtonColor: '#ff6b35',
+      timer: 3000,
+      timerProgressBar: true,
+    });
+  };
   const handleReset = () => {
     setPasscode([]);
     setVerificationStatus('idle');
@@ -145,7 +78,7 @@ const Passcode = () => {
   // ✅ Keyboard support: digits, backspace, enter
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (verificationStatus !== 'idle' || loading) return;
+      if (verificationStatus !== 'idle') return;
 
       if (/^[0-9]$/.test(e.key)) {
         e.preventDefault();
@@ -162,7 +95,7 @@ const Passcode = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [passcode, verificationStatus, loading]);
+  }, [passcode, verificationStatus]);
 
   // Helper to format date
   const formatDate = (dateString) => {
@@ -292,21 +225,21 @@ const Passcode = () => {
               <button
                 key={num}
                 onClick={() => handleKeyPress(num)}
-                disabled={passcode.length === 6 || loading}
+                disabled={passcode.length === 6}
               >
                 {num}
               </button>
             ))}
             <button
               onClick={() => handleKeyPress(0)}
-              disabled={passcode.length === 6 || loading}
+              disabled={passcode.length === 6}
             >
               0
             </button>
             <button
               className="backspace-btn"
               onClick={handleBackspace}
-              disabled={passcode.length === 0 || loading}
+              disabled={passcode.length === 0}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" />
@@ -320,9 +253,9 @@ const Passcode = () => {
           <button
             className={`action-btn ${passcode.length === 6 ? 'filled' : 'primary'}`}
             onClick={handleVerify}
-            disabled={passcode.length < 6 || loading}
+            disabled={passcode.length < 6}
           >
-            {loading ? 'Verifying...' : 'Verify Passcode'}
+            Verify Passcode
           </button>
 
           {/* Reset Link */}

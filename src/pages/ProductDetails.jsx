@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
 import Swal from "sweetalert2";
 import {
   FaMapMarkerAlt,
@@ -15,30 +14,47 @@ import {
 import "../Styles/Product.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { getTouristCenterById, getAllPackages } from "../redox/apiSlice";
+
+// UI-only build: static sample data used when no centre is passed via navigation state
+const SAMPLE_PACKAGES = [
+  { id: "pkg-adult", packageName: "Adult Ticket", packageType: "Adult", amount: 2500, numberOfPeople: 1 },
+  { id: "pkg-child", packageName: "Child Ticket", packageType: "Child", amount: 1500, numberOfPeople: 1 },
+  { id: "pkg-family", packageName: "Family Pass", packageType: "Family", amount: 7500, numberOfPeople: 4 },
+];
+
+const SAMPLE_CENTRE = {
+  id: "sample-1",
+  centreName: "Lekki Conservation Centre",
+  city: "Lagos",
+  state: "Lagos",
+  openingHours: "8:30 AM - 5:00 PM",
+  rating: 5.0,
+  reviews: 567,
+  description:
+    "A popular nature reserve featuring the longest canopy walkway in Africa, walking trails, and wildlife viewing.",
+  images: ["/novaxcape/lekki.png"],
+};
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
   const [isWishlist, setIsWishlist] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [, setSelectedPackage] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [centrePackages, setCentrePackages] = useState([]);
-
-  const { selectedTouristCenter, touristCentresLoading, touristCentresError, packages, packagesLoading } =
-    useSelector((state) => state.api);
+  const centrePackages = SAMPLE_PACKAGES;
 
   const getCentreData = () => {
-    if (location.state?.centre) return location.state.centre;
-    if (location.state?.centreDetails) return location.state.centreDetails;
-
-    if (selectedTouristCenter) {
-      return selectedTouristCenter?.data || 
-             selectedTouristCenter?.tourist || 
-             selectedTouristCenter;
+    const raw =
+      location.state?.centre || location.state?.centreDetails || null;
+    if (raw) {
+      // Normalise the static cards from the Discover page
+      return {
+        ...raw,
+        centreName: raw.centreName || raw.name || raw.title,
+        images: raw.images || (raw.image ? [raw.image] : undefined),
+        packages: raw.packages || undefined,
+      };
     }
 
     const pendingBooking = localStorage.getItem('pendingBooking');
@@ -46,49 +62,22 @@ const ProductDetails = () => {
       try {
         const parsed = JSON.parse(pendingBooking);
         if (parsed.centreDetails) return parsed.centreDetails;
-      } catch (e) {
-        console.error("Error parsing pending booking:", e);
+      } catch {
+        // ignore malformed data
       }
     }
-    return null;
+    return { ...SAMPLE_CENTRE, id: id || SAMPLE_CENTRE.id };
   };
 
   const centre = getCentreData();
 
-  // ✅ FIXED: Load wishlist from localStorage on component mount
+  // Load wishlist state from localStorage on mount
   useEffect(() => {
-    if (centre) {
-      const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-      const centreId = id || centre?.id || centre?._id;
-      const isSaved = savedWishlist.some(item => item.id === centreId || item._id === centreId);
-      setIsWishlist(isSaved);
-    }
-  }, [id, centre]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        if (!centre && id) {
-          await dispatch(getTouristCenterById(id));
-        }
-        await dispatch(getAllPackages(id));
-      } catch (error) {
-        console.error("❌ Fetch error:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, [dispatch, id, centre]);
-
-  useEffect(() => {
-    if (!packages || packages.length === 0) {
-      setCentrePackages([]);
-      return;
-    }
-    setCentrePackages(packages);
-  }, [packages]);
+    const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    const centreId = id || centre?.id || centre?._id;
+    setIsWishlist(savedWishlist.some(item => item.id === centreId || item._id === centreId));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   // Handle Add to Wishlist / Favorite
   const handleWishlistToggle = () => {
@@ -167,36 +156,6 @@ const ProductDetails = () => {
     window.dispatchEvent(new Event('wishlistUpdated'));
   };
 
-  // Show loading state
-  if (touristCentresLoading || packagesLoading || isLoading) {
-    return (
-      <>
-        <Header />
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Loading centre details...</p>
-        </div>
-        <Footer />
-      </>
-    );
-  }
-
-  // Show error state
-  if ((touristCentresError && !centre) || !centre) {
-    return (
-      <>
-        <Header />
-        <div className="error-container">
-          <h2>Centre Not Found</h2>
-          <p>Unable to load centre details. Please try again.</p>
-          <button onClick={() => navigate("/discover")} className="back-btn">
-            Back to Discover
-          </button>
-        </div>
-        <Footer />
-      </>
-    );
-  }
 
   // Parse fields safely (only runs if centre exists)
   const centreName = centre.centreName || centre.name || "Tourist Centre";
@@ -260,12 +219,6 @@ const ProductDetails = () => {
     };
 
     localStorage.setItem('pendingBooking', JSON.stringify(bookingData));
-    const token = localStorage.getItem('token') || localStorage.getItem('userToken');
-
-    if (!token) {
-      navigate("/signin", { state: { from: `/centre/${centreId}`, bookingData } });
-      return;
-    }
 
     navigate(`/booking-summary/${centreId}/${pkg.id}`, { state: bookingData });
   };
@@ -321,19 +274,19 @@ const ProductDetails = () => {
           <section className="gallery">
             <div className="main-image">
               <img
-                src=""
+                src={images[0]}
                 alt={centreName}
                 onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1506744038136-46273834b3fb"; }}
               />
             </div>
             <div className="side-images">
               <img 
-                src="" 
+                src={images[1]} 
                 alt="" 
                 onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"; }}
               />
               <img 
-                src="" 
+                src={images[2]} 
                 alt="" 
                 onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e"; }}
               />
@@ -412,7 +365,7 @@ const ProductDetails = () => {
             {/* MAP BLOCK */}
             <div className="map-block">
               <img 
-                src="" 
+                src="https://i.postimg.cc/N0F86Np4/map.jpg" 
                 alt="Location Map" 
                 style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "12px" }}
               />
@@ -451,7 +404,7 @@ const ProductDetails = () => {
             <h2>Destinations you may also like</h2>
             <div className="destination-grid">
               <div className="destination-card">
-                <img src="" alt="" />
+                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb" alt="" />
                 <div className="card-content">
                   <h4>Lekki Conservation Centre</h4>
                   <p className="card-location">Lagos</p>
@@ -464,7 +417,7 @@ const ProductDetails = () => {
               </div>
 
               <div className="destination-card">
-                <img src="" alt="" />
+                <img src="https://images.unsplash.com/photo-1511497584788-876760111969" alt="" />
                 <div className="card-content">
                   <h4>Olumo Rock</h4>
                   <p className="card-location">Abeokuta</p>
@@ -477,7 +430,7 @@ const ProductDetails = () => {
               </div>
 
               <div className="destination-card">
-                <img src="" alt="" />
+                <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e" alt="" />
                 <div className="card-content">
                   <h4>Mapo Hall</h4>
                   <p className="card-location">Ibadan</p>

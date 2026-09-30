@@ -12,7 +12,7 @@ const BookingHeader = () => {
         <div className="navbar-logo-wrapper">
           <Link to="/">
             <img
-              src=""
+              src="/novaxcape/logo.png"
               alt="novaxcape"
               className="navbar-brand-logo"
             />

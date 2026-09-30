@@ -1,20 +1,20 @@
 // Discoversection.jsx
-import React, { useState, useCallback, useMemo, memo, useEffect } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaStar, FaRegClock } from "react-icons/fa";
 import { FiTrendingUp } from "react-icons/fi";
 import "./css/Discoversection.css";
 
 // Static images (fallback)
-const lekki = "";
-const olumo = "";
-const mapo = "";
-const greenLegacy = "";
-const yankari = "";
-const obudu = "";
-const millennium = "";
-const nikeGallery = "";
-const agodi = "";
+import lekki from "/novaxcape/lekki.png";
+import olumo from "/novaxcape/olumo.png";
+import mapo from "/novaxcape/mapo.png";
+import greenLegacy from "/novaxcape/greenLegacy.png";
+import yankari from "/novaxcape/yankari.png";
+import obudu from "/novaxcape/obudu.png";
+import millennium from "/novaxcape/millennium.png";
+import nikeGallery from "/novaxcape/nikeGallery.png";
+import agodi from "/novaxcape/agodi.png";
 
 const categories = [
   "All",
@@ -207,40 +207,21 @@ const getIsTrending = (place) => {
 const Discoversection = ({
   searchState = "",
   searchSubmitted = false,
-  touristCentres = [],
-  loading = false,
-  error = null,
   onClearSearch,
 }) => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("All");
   
-  // ✅ Get valid centres from API data
-  const getValidCentres = useCallback((centres) => {
-    if (!centres || !Array.isArray(centres)) return [];
-    return centres.filter((centre) => {
-      if (!centre) return false;
-      const hasKeys = Object.keys(centre).length > 0;
-      const hasData =
-        centre.centreName ||
-        centre.name ||
-        centre.title ||
-        centre.id ||
-        centre._id ||
-        centre.centreId ||
-        centre.city ||
-        centre.state ||
-        centre.location;
-      return hasKeys && hasData;
-    });
-  }, []);
-
+  // UI-only build: search filters the static sample list by location
   const validTouristCentres = useMemo(() => {
-    return getValidCentres(touristCentres);
-  }, [touristCentres, getValidCentres]);
+    const term = searchState.trim().toLowerCase();
+    if (!term) return [];
+    return staticAttractions.filter((a) =>
+      a.location.toLowerCase().includes(term)
+    );
+  }, [searchState]);
 
   const hasValidCentres = validTouristCentres.length > 0;
-
   // ✅ Navigation handlers
   const handleViewDetails = useCallback((centre) => {
     const centreId = centre.id || centre._id || centre.centreId;
@@ -353,7 +334,7 @@ const Discoversection = ({
       >
         <div className="place-image-wrapper">
           <img
-            src=""
+            src={imageSrc}
             alt={title}
             className="place-image"
             onError={(e) => {
@@ -402,58 +383,9 @@ const Discoversection = ({
     );
   };
 
-  // ✅ Loading state
-  if (loading && hasActiveSearch) {
-    return (
-      <section className="discover-section">
-        <div className="category-container">
-          {categories.map((category) => (
-            <button
-              key={category}
-              className={`category-btn ${activeCategory === category ? "active" : ""}`}
-              onClick={() => handleCategoryClick(category)}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Loading amazing destinations...</p>
-        </div>
-      </section>
-    );
-  }
-
-  // ✅ Error state
-  if (error && hasActiveSearch) {
-    return (
-      <section className="discover-section">
-        <div className="category-container">
-          {categories.map((category) => (
-            <button
-              key={category}
-              className={`category-btn ${activeCategory === category ? "active" : ""}`}
-              onClick={() => handleCategoryClick(category)}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-        <div className="error-container">
-          <p className="error-text">
-            {typeof error === "string" ? error : error.message || "Failed to load centers"}
-          </p>
-          <button className="try-again-btn" onClick={() => window.location.reload()}>
-            Try Again
-          </button>
-        </div>
-      </section>
-    );
-  }
 
   // ✅ No results state
-  if (!loading && hasActiveSearch && !error && !hasValidCentres) {
+  if (hasActiveSearch && !hasValidCentres) {
     return (
       <section className="discover-section">
         <div className="category-container">
@@ -499,14 +431,12 @@ const Discoversection = ({
       {hasActiveSearch && (
         <div className="search-results-header">
           <h2>Search results for "{searchState}"</h2>
-          {!loading && !error && (
-            <p>{filteredCenters.length} centre(s) found</p>
-          )}
+          <p>{filteredCenters.length} centre(s) found</p>
         </div>
       )}
 
       {/* Places Grid */}
-      {!loading && !error && filteredCenters.length > 0 && (
+      {filteredCenters.length > 0 && (
         <div className="places-grid">
           {filteredCenters.map((place, index) => {
             const isStatic = place.title && !place.centreName;

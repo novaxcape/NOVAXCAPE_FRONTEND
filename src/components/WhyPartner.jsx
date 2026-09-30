@@ -39,7 +39,7 @@ const WhyPartner = () => {
         <div className="why-partner-column-center">
           <div className="center-image-container">
             <img 
-              src="" 
+              src="/novaxcape/partner.png" 
               alt="NovaXcape Partners" 
               className="center-banner-image" 
             />

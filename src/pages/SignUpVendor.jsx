@@ -3,42 +3,11 @@ import React, { useState } from "react";
 import { z } from "zod";
 import Swal from "sweetalert2"; // UNCOMMENT THIS LINE
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { useDispatch, useSelector } from "react-redux";
+
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import {
-  setVendorDetails,
-  updateVendorToken,
-  setLoading,
-  setError,
-  clearError,
-} from "../redox/authSlice";
+
 import "../Styles/SignUpVendor.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-
-// MOVE INTERCEPTORS OUTSIDE THE COMPONENT - PLACE THEM HERE
-axios.interceptors.request.use((request) => {
-  console.log("Starting Request:", request.url, request.data);
-  return request;
-});
-
-axios.interceptors.response.use(
-  (response) => {
-    console.log("Response:", response.status, response.data);
-    return response;
-  },
-  (error) => {
-    console.log("Full Error Object:", {
-      message: error.message,
-      response: error.response,
-      request: error.request,
-      config: error.config,
-    });
-    return Promise.reject(error);
-  },
-);
 
 const signUpSchema = z
   .object({
@@ -61,12 +30,9 @@ const signUpSchema = z
 
 const SignUpVendor = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { loading: reduxLoading, error } = useSelector((state) => state.auth);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoadingState] = useState(false);
 
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [termsError, setTermsError] = useState("");
@@ -87,9 +53,6 @@ const SignUpVendor = () => {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
-    if (error) {
-      dispatch(clearError());
-    }
   };
 
   const handleTermsChange = (e) => {
@@ -99,7 +62,7 @@ const SignUpVendor = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     const result = signUpSchema.safeParse(formData);
@@ -133,103 +96,27 @@ const SignUpVendor = () => {
 
     setErrors({});
     setTermsError("");
-    setLoadingState(true);
-    dispatch(setLoading(true));
-    dispatch(clearError());
+    // UI-only: no request is made.
+    Swal.fire({
+      icon: "success",
+      title: "Success!",
+      text: "Vendor account created successfully. Please verify your email.",
+      confirmButtonColor: "#ff6b35",
+    });
 
-    // Save vendor email to localStorage
-    localStorage.setItem("vendorEmail", formData.email);
-
-    const userData = {
-      centerName: formData.centerName,
-      email: formData.email,
-      phoneNumber: formData.phoneNumber,
-      password: formData.password,
-    };
-
-    try {
-      // Vendor registration endpoint
-      const response = await axios.post(
-        `${API_BASE_URL}/vendor/register`,
-        userData,
-      );
-
-      console.log("Vendor API Response:", response.data);
-
-      localStorage.setItem("vendorEmail", formData.email);
-
-      Swal.fire({
-        icon: "success",
-        title: "Success!",
-        text: "Vendor account created successfully. Please verify your email.",
-        confirmButtonColor: "#ff6b35",
-      });
-
-      navigate("/vendor/verify-otp", { state: { email: formData.email } });
-    } catch (error) {
-      console.error("Full error object:", error);
-
-      // Better error handling
-      let errorMessage = "Something went wrong. Please try again.";
-
-      if (error.response) {
-        // Server responded with error
-        console.error("Error response data:", error.response.data);
-        errorMessage =
-          error.response.data?.message ||
-          error.response.data?.error ||
-          `Server error: ${error.response.status}`;
-      } else if (error.request) {
-        // Request made but no response
-        console.error("No response received:", error.request);
-        errorMessage =
-          "Cannot connect to server. Please check your connection.";
-      } else {
-        // Other errors
-        errorMessage = error.message;
-      }
-
-      dispatch(setError(errorMessage));
-
-      Swal.fire({
-        icon: "error",
-        title: "Signup Failed",
-        text: errorMessage,
-        confirmButtonColor: "#ff6b35",
-      });
-    } finally {
-      setLoadingState(false);
-      dispatch(setLoading(false));
-    }
+    navigate("/vendor/verify-otp", { state: { email: formData.email } });
   };
-
   return (
     <div className="signup_wrapper">
       <div className="signupBody">
         <div className="signupLeft">
-          <img src="" alt="Signup" />
+          <img src="/novaxcape/img.png" alt="Signup" />
         </div>
 
         <div className="signupRight">
           <form onSubmit={handleSubmit}>
             <h1 className="signupTitle">Vendor Sign Up</h1>
 
-            {error && (
-              <div
-                className="error-message"
-                style={{
-                  color: "red",
-                  textAlign: "center",
-                  marginBottom: "15px",
-                  padding: "10px",
-                  backgroundColor: "#ffeeee",
-                  borderRadius: "5px",
-                  fontSize: "14px",
-                }}
-              >
-                {error}
-              </div>
-            )}
 
             <div className="field">
               <label>Centre Name</label>
@@ -335,9 +222,9 @@ const SignUpVendor = () => {
             <button
               type="submit"
               className="signupBtn"
-              disabled={loading || reduxLoading}
+              
             >
-              {loading || reduxLoading ? "Creating Account..." : "Sign Up"}
+              Sign Up
             </button>
 
             <p className="signinText">

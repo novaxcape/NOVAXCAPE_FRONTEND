@@ -75,28 +75,28 @@ export default function Home() {
         <div className="hero-gallery">
           <div className="image img1">
             <img
-              src=""
+              src="https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80"
               alt=""
             />
           </div>
 
           <div className="image img2">
             <img
-              src=""
+              src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"
               alt=""
             />
           </div>
 
           <div className="image img3">
             <img
-              src=""
+              src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80"
               alt=""
             />
           </div>
 
           <div className="image img4">
             <img
-              src=""
+              src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1200&q=80"
               alt=""
             />
           </div>
@@ -114,19 +114,19 @@ export default function Home() {
         <div className="cluster">
           <img
             className="one"
-            src=""
+            src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80"
             alt=""
           />
 
           <img
             className="two"
-            src=""
+            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80"
             alt=""
           />
 
           <img
             className="three"
-            src=""
+            src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1200&q=80"
             alt=""
           />
         </div>
@@ -174,7 +174,7 @@ export default function Home() {
           {attractions.map((item) => (
             <div className="card" key={item.name}>
               <div className="card-image">
-                <img src="" alt={item.name} />
+                <img src={item.image} alt={item.name} />
                 <span className="badge">Trending</span>
               </div>
 

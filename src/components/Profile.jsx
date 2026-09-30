@@ -1,137 +1,43 @@
 // File: src/Pages/Profile.jsx
 
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { FiUpload, FiTrash2 } from 'react-icons/fi';
 import { LuSave } from 'react-icons/lu';
-import {
-  updateClientProfile,
-  updateVendorProfile,
-  getVendorDetails,
-  clearClientError,
-  clearClientSuccess,
-  clearVendorError,
-  clearVendorSuccess
-} from '../redox/apiSlice';
+
 import './css/Profile.css';
 
 const Profile = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   
   // Tab control state
   const [activeTab, setActiveTab] = useState('account');
   
-  // Get auth state to determine if user is client or vendor
-  const { loggedInUser, vendorDetails, isVendor } = useSelector((state) => state.auth);
-  
-  // Get API state
-  const {
-    clientProfile,
-    clientLoading,
-    clientError,
-    clientSuccessMessage,
-    vendorProfile,
-    vendorLoading,
-    vendorError,
-    vendorSuccessMessage
-  } = useSelector((state) => state.api);
-
-  const [formData, setFormData] = useState({
-    userName: '',
-    firstName: '',
-    lastName: '',
-    nickname: '',
-    phoneNumber: '',
-    gender: '',
-    email: '',
-    city: '',
-    state: ''
+  // UI-only build: profile values are kept in local state and persisted to localStorage
+  const [formData, setFormData] = useState(() => {
+    let saved = {};
+    try {
+      saved = JSON.parse(localStorage.getItem('clientProfileExtra') || '{}');
+    } catch {
+      saved = {};
+    }
+    return {
+      userName: '',
+      firstName: saved.firstName || 'Ada',
+      lastName: saved.lastName || 'Okafor',
+      nickname: saved.nickname || '',
+      phoneNumber: saved.phoneNumber || '',
+      gender: saved.gender || '',
+      email: saved.email || 'ada@example.com',
+      city: saved.city || '',
+      state: saved.state || ''
+    };
   });
-
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState('/novaxcape/avatar.png');
   const [isAvatarRemoved, setIsAvatarRemoved] = useState(false);
 
-  // Load profile data when component mounts
-  useEffect(() => {
-    if (isVendor && !vendorProfile) {
-      dispatch(getVendorDetails());
-    }
-  }, [isVendor, dispatch, vendorProfile]);
-
-  // Populate form when profile data is available
-  useEffect(() => {
-    const profileData = isVendor ? vendorProfile : clientProfile;
-
-    // Fields the backend doesn't support yet (phone, email, city, state,
-    // gender for clients) are persisted locally so they survive refresh
-    // and login, until the backend adds real support for them.
-    const localExtra = (() => {
-      try {
-        return JSON.parse(localStorage.getItem('clientProfileExtra') || '{}');
-      } catch {
-        return {};
-      }
-    })();
-    
-    if (profileData) {
-      setFormData({
-        firstName: profileData.firstName || profileData.first_name || localExtra.firstName || '',
-        lastName: profileData.lastName || profileData.last_name || localExtra.lastName || '',
-        nickname: profileData.nickname || profileData.userName || profileData.username || '',
-        phoneNumber: profileData.phoneNumber || profileData.phone || localExtra.phoneNumber || '',
-        gender: profileData.gender || localExtra.gender || '',
-        email: profileData.email || (isVendor ? vendorDetails?.email : loggedInUser?.email) || localExtra.email || '',
-        city: profileData.city || localExtra.city || '',
-        state: profileData.state || localExtra.state || ''
-      });
-      
-      const avatarUrl = profileData.profilePicture || profileData.avatar || profileData.avatarUrl;
-      if (avatarUrl && !avatarFile && !isAvatarRemoved) {
-        setAvatarPreview(avatarUrl);
-      }
-    } else if (!isVendor && loggedInUser) {
-      setFormData(prev => ({
-        ...prev,
-        firstName: loggedInUser.firstName || loggedInUser.first_name || localExtra.firstName || '',
-        lastName: loggedInUser.lastName || loggedInUser.last_name || localExtra.lastName || '',
-        email: loggedInUser.email || localExtra.email || '',
-        phoneNumber: loggedInUser.phoneNumber || loggedInUser.phone || localExtra.phoneNumber || '',
-        gender: localExtra.gender || '',
-        city: localExtra.city || '',
-        state: localExtra.state || ''
-      }));
-    }
-  }, [clientProfile, vendorProfile, isVendor, loggedInUser, vendorDetails, avatarFile, isAvatarRemoved]);
-
-  // Handle success/error messages
-  useEffect(() => {
-    if (clientSuccessMessage || vendorSuccessMessage) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: clientSuccessMessage || vendorSuccessMessage,
-        timer: 3000,
-        showConfirmButton: false
-      });
-      dispatch(isVendor ? clearVendorSuccess() : clearClientSuccess());
-    }
-  }, [clientSuccessMessage, vendorSuccessMessage, dispatch, isVendor]);
-
-  useEffect(() => {
-    if (clientError || vendorError) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: clientError || vendorError,
-        confirmButtonColor: '#ff6b35'
-      });
-      dispatch(isVendor ? clearVendorError() : clearClientError());
-    }
-  }, [clientError, vendorError, dispatch, isVendor]);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -177,10 +83,9 @@ const Profile = () => {
     setAvatarPreview('/novaxcape/avatar.png');
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Validate required fields
+
     if (!formData.userName && !formData.firstName) {
       Swal.fire({
         icon: 'warning',
@@ -191,57 +96,10 @@ const Profile = () => {
       return;
     }
 
-    // Create FormData for multipart/form-data upload
-    const profileData = new FormData();
-    
-    // 1. Add userName (required by API)
-    const userName = formData.userName.trim() || 
-                     formData.nickname.trim() || 
-                     `${formData.firstName} ${formData.lastName}`.trim();
-    
-    // 2. profilePicture is REQUIRED by the API on every update (400 if missing).
-    // If the user picked a new file, use it directly.
-    // Otherwise, fall back to fetching their current avatar as a Blob/File
-    // so the request always includes a profilePicture.
-    let fileToSend = avatarFile;
-
-    if (!fileToSend) {
-      // If the user clicked "Remove", there's no current avatar to fall back to
-      if (isAvatarRemoved) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Profile Picture Required',
-          text: 'Please upload a profile picture before saving.',
-          confirmButtonColor: '#ff6b35'
-        });
-        return;
-      }
-
-      try {
-        const response = await fetch(avatarPreview);
-        const blob = await response.blob();
-        const fileName = avatarPreview.split('/').pop().split('?')[0] || 'avatar.png';
-        fileToSend = new File([blob], fileName, { type: blob.type || 'image/png' });
-      } catch (fetchError) {
-        console.error('Failed to fetch existing avatar as blob:', fetchError);
-        Swal.fire({
-          icon: 'error',
-          title: 'Profile Picture Required',
-          text: 'Could not load your current profile picture. Please upload a new one.',
-          confirmButtonColor: '#ff6b35'
-        });
-        return;
-      }
-    }
-
-    profileData.append('profilePicture', fileToSend);
-
-    // Backend only accepts userName + profilePicture right now.
-    // Persist the rest locally so they show up next time, until
-    // the backend adds real support for these fields.
     localStorage.setItem('clientProfileExtra', JSON.stringify({
       firstName: formData.firstName,
       lastName: formData.lastName,
+      nickname: formData.nickname,
       phoneNumber: formData.phoneNumber,
       gender: formData.gender,
       email: formData.email,
@@ -249,35 +107,14 @@ const Profile = () => {
       state: formData.state,
     }));
 
-    // Note: Other input form values remain visible locally in UI, 
-    // but are not appended to stay compliant with your strict API validation
-    
-    try {
-      console.log('📤 Submitting profile update...');
-      console.log('📤 userName:', userName);
-      console.log('📤 profilePicture:', avatarFile ? avatarFile.name : 'No change');
-      
-      if (isVendor) {
-        await dispatch(updateVendorProfile(profileData)).unwrap();
-      } else {
-        await dispatch(updateClientProfile(profileData)).unwrap();
-      }
-      
-      // Refresh vendor details if vendor
-      if (isVendor) {
-        dispatch(getVendorDetails());
-      }
-
-      // Clear the local file/blob so the next render picks up
-      // the permanent profilePicture URL returned by the server
-      setAvatarFile(null);
-      setIsAvatarRemoved(false);
-    } catch (error) {
-      console.error('❌ Profile update error:', error);
-      // Error is handled by useEffect
-    }
+    Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: 'Profile updated successfully.',
+      timer: 3000,
+      showConfirmButton: false
+    });
   };
-
   const handleDeleteAccount = () => {
     Swal.fire({
       title: 'Are you sure?',
@@ -300,8 +137,6 @@ const Profile = () => {
     });
   };
 
-  const isLoading = isVendor ? vendorLoading : clientLoading;
-
   return (
     <div className="profile-page-wrapper">
       <div className="profile-settings-container">
@@ -314,7 +149,7 @@ const Profile = () => {
         <section className="profile-photo-section">
           <div className="avatar-wrapper">
             <img 
-              src="" 
+              src={avatarPreview} 
               alt="User avatar" 
               className="avatar-image" 
               onError={(e) => { e.target.src = '/novaxcape/avatar.png'; }}
@@ -489,8 +324,8 @@ const Profile = () => {
           </div>
 
           <div className="form-actions-footer">
-            <button type="submit" className="btn-save" disabled={isLoading}>
-              {isLoading ? 'Saving...' : 'Save Changes'}
+            <button type="submit" className="btn-save">
+              Save Changes
               <LuSave className="react-icon" />
             </button>
             <button type="button" className="btn-delete" onClick={handleDeleteAccount}>

@@ -10,7 +10,7 @@ const SignInScreen = () => {
   return (
     <div className="signup-page">
       <div className="signup-logo">
-        <img src="" alt="NovaXcape" />
+        <img src="/novaxcape/logo.png" alt="NovaXcape" />
       </div>
 
       <div className="signup-header">

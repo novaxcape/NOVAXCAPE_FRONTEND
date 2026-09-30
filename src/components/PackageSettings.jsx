@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -12,92 +11,24 @@ import {
   Trash2,
   Eye,
 } from "lucide-react";
-import {
-  getAllPackages,
-  deletePackage,
-  createPackage,
-  updatePackage,
-} from "../redox/apiSlice";
+
 import "./css/Package.css";
 
-const getEntityId = (value) =>
-  value?.id ||
-  value?._id ||
-  value?.touristId ||
-  value?.centreId ||
-  value?.centerId ||
-  value?.tourist?.id ||
-  value?.tourist?._id ||
-  value?.touristCentre?.id ||
-  value?.touristCentre?._id;
+// UI-only build: static sample data (no API calls); changes live in local state only
+const SAMPLE_PACKAGES = [
+  { id: "pkg-1", packageName: "Adult Ticket", packageType: "Adult", numberOfPeople: 1, amount: 2500, status: "active", description: "Standard adult entry" },
+  { id: "pkg-2", packageName: "Children Ticket", packageType: "Child", numberOfPeople: 1, amount: 1500, status: "active", description: "Entry for ages 5-17" },
+  { id: "pkg-3", packageName: "Family Pack", packageType: "Family", numberOfPeople: 4, amount: 7000, status: "active", description: "2 adults and 2 children" },
+  { id: "pkg-4", packageName: "Guided Tour", packageType: "Group", numberOfPeople: 10, amount: 20000, status: "inactive", description: "Guided group experience" },
+];
 
-const getStoredCentreId = () =>
-  localStorage.getItem("latestTouristId") ||
-  localStorage.getItem("centreId") ||
-  localStorage.getItem("touristId");
-
-const PackageLoadingState = () => (
-  <div className="package-container package-container--loading" aria-busy="true">
-    <div className="package-header">
-      <div className="package-loading-title-area">
-        <span className="package-skeleton package-skeleton-title" />
-        <span className="package-skeleton package-skeleton-subtitle" />
-      </div>
-      <span className="package-skeleton package-skeleton-add-btn" />
-    </div>
-
-    <div className="package-filters package-filters--loading">
-      <span className="package-skeleton package-skeleton-search" />
-      <div className="package-loading-tabs">
-        <span className="package-skeleton package-skeleton-filter active" />
-        <span className="package-skeleton package-skeleton-filter" />
-        <span className="package-skeleton package-skeleton-filter" />
-        <span className="package-skeleton package-skeleton-count" />
-      </div>
-    </div>
-
-    <div className="stats-grid package-loading-stats">
-      {Array.from({ length: 3 }).map((_, index) => (
-        <div className="stat-card package-loading-stat-card" key={index}>
-          <span className="package-skeleton package-skeleton-stat-icon" />
-          <div>
-            <span className="package-skeleton package-skeleton-stat-number" />
-            <span className="package-skeleton package-skeleton-stat-label" />
-          </div>
-        </div>
-      ))}
-    </div>
-
-    <div className="package-list package-list--loading">
-      <div className="package-loading-table-head">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <span className="package-skeleton package-skeleton-th" key={index} />
-        ))}
-      </div>
-      <div className="package-loading-table-body">
-        {Array.from({ length: 6 }).map((_, rowIndex) => (
-          <div className="package-loading-table-row" key={rowIndex}>
-            <span className="package-skeleton package-skeleton-name-cell" />
-            <span className="package-skeleton package-skeleton-price-cell" />
-            <span className="package-skeleton package-skeleton-type-cell" />
-            <span className="package-skeleton package-skeleton-status-cell" />
-            <span className="package-skeleton package-skeleton-date-cell" />
-            <span className="package-skeleton package-skeleton-actions-cell" />
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-);
 
 const PackageSettings = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
-  const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [packages, setPackages] = useState(SAMPLE_PACKAGES);
   const [error, setError] = useState(null);
 
   // Modal display control states
@@ -117,52 +48,6 @@ const PackageSettings = () => {
     status: "active",
   });
 
-  // Get packages and vendor centres from Redux state
-  const {
-    packages: packagesFromRedux,
-    packagesLoading,
-    packagesError,
-  } = useSelector((state) => state.api);
-  const { vendorCentres } = useSelector((state) => state.api);
-  const { vendorDetails } = useSelector((state) => state.auth);
-
-  // Get the centre/tourist ID used by package APIs.
-  const centreId =
-    getEntityId(vendorCentres?.[0]) || getStoredCentreId() || getEntityId(vendorDetails);
-
-  // Fetch packages when centreId changes
-  useEffect(() => {
-    if (centreId) {
-      fetchPackages(centreId);
-    } else {
-      setLoading(false);
-    }
-  }, [centreId]);
-
-  // Update local packages when Redux packages change
-  useEffect(() => {
-    if (packagesFromRedux && packagesFromRedux.length > 0) {
-      setPackages(packagesFromRedux);
-    }
-  }, [packagesFromRedux]);
-
-  const fetchPackages = async (id) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await dispatch(getAllPackages(id)).unwrap();
-
-      // The API returns: { message, count, data: packages[] }
-      const packageList = result?.data || result?.packages || result || [];
-      setPackages(packageList);
-    } catch (error) {
-      console.error("Error fetching packages:", error);
-      setError(error || "Failed to load packages");
-      setPackages([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Handle delete click
   const handleDeleteClick = (packageId) => {
@@ -170,25 +55,13 @@ const PackageSettings = () => {
   };
 
   // Execute delete confirm action
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = () => {
     if (!deleteTargetId) return;
-    try {
-      setLoading(true);
-      await dispatch(deletePackage(deleteTargetId)).unwrap();
-      setDeleteTargetId(null);
-      setSuccessMessage("Package deleted successfully");
-      setShowSuccessModal(true);
-      // Refresh packages
-      if (centreId) fetchPackages(centreId);
-    } catch (error) {
-      console.error("Failed to delete package:", error);
-      setError(error || "Failed to delete package");
-      setDeleteTargetId(null);
-    } finally {
-      setLoading(false);
-    }
+    setPackages((prev) => prev.filter((p) => (p.id || p._id) !== deleteTargetId));
+    setDeleteTargetId(null);
+    setSuccessMessage("Package deleted successfully");
+    setShowSuccessModal(true);
   };
-
   // Open Add popup
   const handleAddPackageClick = () => {
     setFormData({
@@ -221,10 +94,9 @@ const PackageSettings = () => {
   };
 
   // Handle Add Form Submission
-  const handleAddSubmit = async (e) => {
+  const handleAddSubmit = (e) => {
     e.preventDefault();
 
-    // Validate required fields
     if (!formData.packageName) {
       setError("Package name is required");
       return;
@@ -235,47 +107,26 @@ const PackageSettings = () => {
       return;
     }
 
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Prepare package data for API - matches the exact API spec
-      const packageData = {
+    setError(null);
+    setPackages((prev) => [
+      ...prev,
+      {
+        id: `pkg-${Date.now()}`,
         packageName: formData.packageName,
         packageType: formData.packageType || "Standard",
         numberOfPeople: formData.numberOfPeople || "1",
         amount: parseFloat(formData.amount),
-      };
-
-      console.log("📦 Creating package with data:", packageData);
-      console.log("📦 For touristId:", centreId);
-
-      await dispatch(
-        createPackage({
-          touristId: centreId,
-          packageData,
-        }),
-      ).unwrap();
-
-      setShowAddModal(false);
-      setSuccessMessage("Package added successfully");
-      setShowSuccessModal(true);
-
-      // Refresh packages
-      if (centreId) fetchPackages(centreId);
-    } catch (error) {
-      console.error("❌ Failed to create package:", error);
-      setError(error || "Failed to create package");
-    } finally {
-      setLoading(false);
-    }
+        status: formData.status || "active",
+      },
+    ]);
+    setShowAddModal(false);
+    setSuccessMessage("Package added successfully");
+    setShowSuccessModal(true);
   };
-
   // Handle Edit Form Submission
-  const handleEditSubmit = async (e) => {
+  const handleEditSubmit = (e) => {
     e.preventDefault();
 
-    // Validate required fields
     if (!formData.packageName) {
       setError("Package name is required");
       return;
@@ -286,41 +137,25 @@ const PackageSettings = () => {
       return;
     }
 
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Prepare package data for API
-      const packageData = {
-        packageName: formData.packageName,
-        packageType: formData.packageType || "Standard",
-        numberOfPeople: formData.numberOfPeople || "1",
-        amount: parseFloat(formData.amount),
-      };
-
-      console.log("📦 Updating package:", { id: formData.id, ...packageData });
-
-      await dispatch(
-        updatePackage({
-          id: formData.id,
-          packageData,
-        }),
-      ).unwrap();
-
-      setShowEditModal(false);
-      setSuccessMessage("Package updated successfully");
-      setShowSuccessModal(true);
-
-      // Refresh packages
-      if (centreId) fetchPackages(centreId);
-    } catch (error) {
-      console.error("❌ Failed to update package:", error);
-      setError(error || "Failed to update package");
-    } finally {
-      setLoading(false);
-    }
+    setError(null);
+    setPackages((prev) =>
+      prev.map((p) =>
+        (p.id || p._id) === formData.id
+          ? {
+              ...p,
+              packageName: formData.packageName,
+              packageType: formData.packageType || "Standard",
+              numberOfPeople: formData.numberOfPeople || "1",
+              amount: parseFloat(formData.amount),
+              status: formData.status || p.status,
+            }
+          : p,
+      ),
+    );
+    setShowEditModal(false);
+    setSuccessMessage("Package updated successfully");
+    setShowSuccessModal(true);
   };
-
   // Handle view package details
   const handleView = (packageId) => {
     navigate(`/vendor/package/${packageId}`);
@@ -347,30 +182,6 @@ const PackageSettings = () => {
     (p) => p.status === "inactive",
   ).length;
 
-  // Show loading state
-  if (loading || packagesLoading) {
-    return <PackageLoadingState />;
-  }
-
-  // Show error state
-  if (error && packages.length === 0) {
-    return (
-      <div className="package-container">
-        <div className="package-header">
-          <div>
-            <h2>Package Settings</h2>
-            <p>Error loading packages</p>
-          </div>
-        </div>
-        <div className="error-state">
-          <p>{error}</p>
-          <button onClick={() => centreId && fetchPackages(centreId)}>
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="package-container">
@@ -647,9 +458,8 @@ const PackageSettings = () => {
                 <button
                   type="submit"
                   className="modal-btn-submit"
-                  disabled={loading}
                 >
-                  <Check size={16} /> {loading ? "Adding..." : "Add Package"}
+                  <Check size={16} /> Add Package
                 </button>
               </div>
             </form>
@@ -735,9 +545,8 @@ const PackageSettings = () => {
                 <button
                   type="submit"
                   className="modal-btn-submit"
-                  disabled={loading}
                 >
-                  <Check size={16} /> {loading ? "Saving..." : "Save changes"}
+                  <Check size={16} /> Save changes
                 </button>
               </div>
             </form>
@@ -790,9 +599,8 @@ const PackageSettings = () => {
               <button
                 className="alert-btn-delete"
                 onClick={handleConfirmDelete}
-                disabled={loading}
               >
-                {loading ? "Deleting..." : "Delete"}
+                Delete
               </button>
             </div>
           </div>

@@ -1,21 +1,14 @@
 // Pages/Vendor/VendorResetPassword.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import { FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
-import axios from 'axios';
 import Swal from 'sweetalert2';
-import { setLoading, setError, clearError } from '../redox/authSlice';
 import "../Styles/SignUpVendor.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://novaxcape.onrender.com/api/v1";
 
 const VendorResetPassword = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const location = useLocation();
-  const { loading: reduxLoading } = useSelector((state) => state.auth);
-  
   // Get email from location state (passed from forgot password)
   const email = location.state?.email || "";
   
@@ -23,7 +16,6 @@ const VendorResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoadingState] = useState(false);
   const [error, setErrorState] = useState("");
   const [success, setSuccess] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState({
@@ -78,92 +70,34 @@ const VendorResetPassword = () => {
     return true;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
     
-    setLoadingState(true);
     setErrorState("");
-    dispatch(setLoading(true));
-    dispatch(clearError());
-    
-    try {
-      // API expects only email and password (no OTP)
-      const payload = {
-        email: email,
-        password: password
-      };
-      
-      console.log("🔄 Sending reset password request:", { 
-        email: payload.email,
-        password: "****" // Hide password in logs
-      });
-      
-      const response = await axios.post(`${API_BASE_URL}/vendor/reset-password`, payload);
-      
-      console.log("✅ Reset password response:", response.data);
-      
-      setSuccess(true);
-      
-      Swal.fire({
-        icon: "success",
-        title: "Password Reset Successful!",
-        text: "Your password has been reset. Please login with your new password.",
-        confirmButtonColor: "#ff6b35",
-        timer: 3000,
-        timerProgressBar: true,
-      });
-      
-      // Navigate to login after 3 seconds
-      setTimeout(() => {
-        navigate("/vendor/login", { 
-          state: { message: "Password reset successful! Please login with your new password." }
-        });
-      }, 3000);
-      
-    } catch (error) {
-      console.error("❌ Reset password error:", error.response?.data);
-      
-      // Handle different error scenarios
-      let errorMessage = "Failed to reset password. Please try again.";
-      
-      if (error.response) {
-        console.error("Error status:", error.response.status);
-        console.error("Error data:", error.response.data);
-        
-        if (error.response.data?.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.status === 404) {
-          errorMessage = "Invalid credentials. Please check your email or request a new reset link.";
-        } else if (error.response.status === 400) {
-          errorMessage = "Invalid password format. Please check the requirements.";
-        } else if (error.response.status === 429) {
-          errorMessage = "Too many attempts. Please wait before trying again.";
-        } else if (error.response.status === 500) {
-          errorMessage = "Server error. Please try again later.";
-        }
-      } else if (error.request) {
-        errorMessage = "Network error. Please check your connection.";
-      }
-      
-      setErrorState(errorMessage);
-      dispatch(setError(errorMessage));
-      
-      Swal.fire({
-        icon: "error",
-        title: "Reset Failed",
-        text: errorMessage,
-        confirmButtonColor: "#ff6b35",
-      });
-    } finally {
-      setLoadingState(false);
-      dispatch(setLoading(false));
-    }
-  };
 
+    // UI-only: no request is made.
+    setSuccess(true);
+
+    Swal.fire({
+      icon: "success",
+      title: "Password Reset Successful!",
+      text: "Your password has been reset. Please login with your new password.",
+      confirmButtonColor: "#ff6b35",
+      timer: 3000,
+      timerProgressBar: true,
+    });
+
+    // Navigate to login after 3 seconds
+    setTimeout(() => {
+      navigate("/vendor/login", {
+        state: { message: "Password reset successful! Please login with your new password." }
+      });
+    }, 3000);
+  };
   const getPasswordStrengthLevel = () => {
     const validCount = Object.values(passwordStrength).filter(v => v).length;
     if (validCount <= 2) return { text: "Weak", color: "#ef4444", width: "20%" };
@@ -178,7 +112,7 @@ const VendorResetPassword = () => {
       <div className="login-wrapper">
         <div className="login-container">
           <div className="login-panel">
-            <img src="" alt="Success" />
+            <img src="/novaxcape/img.png" alt="Success" />
           </div>
           <div className="rightLogin-panel" style={{ textAlign: "center" }}>
             <FaCheckCircle size={80} color="#22c55e" />
@@ -199,7 +133,7 @@ const VendorResetPassword = () => {
     <div className="login-wrapper">
       <div className="login-container">
         <div className="login-panel">
-          <img src="" alt="Reset Password" />
+          <img src="/novaxcape/img.png" alt="Reset Password" />
         </div>
         <div className="rightLogin-panel">
           <h2>Reset Password</h2>
@@ -235,7 +169,6 @@ const VendorResetPassword = () => {
                   placeholder="New password (min 8 characters)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading || reduxLoading}
                   required
                   style={{ 
                     width: "100%", 
@@ -299,7 +232,6 @@ const VendorResetPassword = () => {
                   placeholder="Confirm password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={loading || reduxLoading}
                   required
                   style={{ 
                     width: "100%", 
@@ -339,10 +271,8 @@ const VendorResetPassword = () => {
             <button 
               type="submit" 
               className="signup-btn" 
-              disabled={loading || reduxLoading}
-              style={{ opacity: (loading || reduxLoading) ? 0.7 : 1 }}
             >
-              {loading || reduxLoading ? "Resetting Password..." : "Reset Password"}
+              Reset Password
             </button>
           </form>
           

@@ -1,15 +1,9 @@
 // File: src/components/Hero.jsx
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useSelector } from "react-redux";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../components/css/Hero.css";
 import { FaCalendarAlt } from "react-icons/fa";
-import {
-  selectPackages,
-  selectTouristCentres,
-  selectVendorCentres,
-} from "../redox/apiSlice";
 
 const ROTATING_TEXTS = [
   "Stunning Places",
@@ -18,14 +12,11 @@ const ROTATING_TEXTS = [
   "Beautiful Destination",
 ];
 
-// Fallback list, used only if nothing useful is in Redux yet
-const FALLBACK_LOCATIONS = [
+// Static list of locations shown in the location dropdown
+const LOCATIONS = [
   "Lagos", "Abuja", "Port Harcourt", "Calabar",
   "Kastina", "Enugu", "Ibadan", "Ogun",
 ];
-
-const extractState = (item) =>
-  item?.state || item?.location || item?.stateName || item?.centreState || null;
 
 const CalendarPicker = ({ onSelect, selectedDate }) => {
   const today = new Date();
@@ -113,21 +104,6 @@ const Hero = () => {
   const [calOpen, setCalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
 
-  // ---- Pull whatever's already loaded in Redux and derive unique states ----
-  const packages = useSelector(selectPackages) || [];
-  const touristCentres = useSelector(selectTouristCentres) || [];
-  const vendorCentres = useSelector(selectVendorCentres) || [];
-
-  const LOCATIONS = useMemo(() => {
-    const all = [...packages, ...touristCentres, ...vendorCentres];
-    const states = all
-      .map(extractState)
-      .filter(Boolean)
-      .map((s) => s.trim());
-
-    const unique = Array.from(new Set(states));
-    return unique.length > 0 ? unique.sort() : FALLBACK_LOCATIONS;
-  }, [packages, touristCentres, vendorCentres]);
 
   // Desktop refs
   const locationRef = useRef(null);
@@ -206,7 +182,7 @@ const Hero = () => {
         <div className="hero_left">
 
           <div className="hero_tagline">
-            <img src="" alt="Explore Nigeria's hidden gems" />
+            <img src="/novaxcape/Explore.png" alt="Explore Nigeria's hidden gems" />
           </div>
 
           <div className="hero_headline">
@@ -280,7 +256,7 @@ const Hero = () => {
 
         {/* RIGHT */}
         <div className="hero_right">
-          <img src="" alt="Nigeria destinations" />
+          <img src="/novaxcape/Heros.png" alt="Nigeria destinations" />
         </div>
 
       </div>
@@ -344,7 +320,7 @@ const Hero = () => {
 
       {/* MOBILE IMAGE — below search */}
       <div className="hero_right_mobile">
-        <img src="" alt="Nigeria destinations" />
+        <img src="/novaxcape/Heros.png" alt="Nigeria destinations" />
       </div>
 
     </div>

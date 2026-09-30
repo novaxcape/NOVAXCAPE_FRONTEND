@@ -22,7 +22,7 @@ const Sidebar = ({ mobileOpen, onMobileClose }) => {
     },
      {
       icon: <img
-              src=""
+              src="/novaxcape/pass.png"
               alt="exit"
               style={{ width: "20px", height: "20px" }}
             /> ,
@@ -37,7 +37,7 @@ const Sidebar = ({ mobileOpen, onMobileClose }) => {
     },
     {
       icon: <img
-              src=""
+              src="/novaxcape/pack.png"
               alt="exit"
               style={{ width: "20px", height: "20px" }}
             /> ,
@@ -72,7 +72,7 @@ const Sidebar = ({ mobileOpen, onMobileClose }) => {
         <div className="sidebar-top">
           <div className="logo-section">
             <img
-              src=""
+              src="/novaxcape/logo.png"
               alt="Novaxcape Logo"
               className="logo-img"
             />
@@ -99,7 +99,7 @@ const Sidebar = ({ mobileOpen, onMobileClose }) => {
           <p className="account-title">Accounts</p>
           <div className="logout-btn" onClick={() => setShowExitModal(true)}>
             <img
-              src=""
+              src="/novaxcape/log.png"
               alt="exit"
               style={{ width: "20px", height: "20px" }}
             />

@@ -7,7 +7,7 @@ const Navbar = () => {
     <nav className="navbar">
    <div className="nav_holder">   <div className="nav-brand">
        <img
-          src=""
+          src="/novaxcape/logo.png"
           alt="novaxcape"
           className="p-navbar-brand-logo"
         />

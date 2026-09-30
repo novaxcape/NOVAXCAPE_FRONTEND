@@ -31,7 +31,7 @@ const TopNavbar2 = ({ onMenuOpen = () => {} }) => {
       </div>
 
       <div className="navbar-mobile1-logo">
-        <img src="" alt="Novaxcape" />
+        <img src="/novaxcape/logo.png" alt="Novaxcape" />
       </div>
 
       <div className="search-bar">
@@ -46,7 +46,7 @@ const TopNavbar2 = ({ onMenuOpen = () => {} }) => {
 
       <div className="top-right">
         <div className="profile">
-          <img src="" alt="Admin" />
+          <img src="/novaxcape/profile.png" alt="Admin" />
           <div className="profile-info">
             <span className="profile-name">
               {vendorName}

@@ -6,8 +6,8 @@ import ScrollToTop from "./components/ScrollToTop";
 import Header from "./components/Header";
 import PaymentHeader from "./components/PaymentHeader";
 
-import PrivateRoute from "./Pages/PrivateRoute";
-import PublicRoute from "./Pages/PublicRoute";
+import PrivateRoute from "./Pages/PrivateRoute.jsx";
+import PublicRoute from "./Pages/PublicRoute.jsx";
 import RootLayout from "./Outlet/RootLayout";
 
 // ========== CLIENT PAGES ==========

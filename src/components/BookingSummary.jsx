@@ -1,48 +1,22 @@
 import React from "react";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
 import Swal from "sweetalert2";
 import "./css/BookingSummary.css";
-import { 
-  createBooking, 
-  initializePayment, 
-  getPackageById,
-  getPaymentPlans 
-} from "../redox/apiSlice";
 
 const SERVICE_FEE = 500;
 
-const decodeJwtPayload = (token) => {
-  if (!token) return null;
-
-  try {
-    const payload = token.split(".")[1];
-    if (!payload) return null;
-
-    const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(normalizedPayload));
-  } catch (error) {
-    console.warn("Unable to decode auth token payload:", error);
-    return null;
-  }
+// UI-only build: static sample package used when none is passed via navigation state
+const SAMPLE_PACKAGE = {
+  id: "pkg-sample",
+  packageName: "Standard Entry",
+  packages: [
+    { id: "pkg-adult", packageType: "Adult", amount: 2500, description: "Ages 18+ - ₦2,500" },
+    { id: "pkg-child", packageType: "Child", amount: 1500, description: "Ages 5-17 - ₦1,500" },
+    { id: "pkg-family", packageType: "Family pack", amount: 7000, description: "2 Adults + 2 Children - ₦7,000" },
+  ],
 };
 
-const getEntityId = (value) =>
-  value?.id ||
-  value?._id ||
-  value?.clientId ||
-  value?.ClientId ||
-  value?.userId ||
-  value?.UserId ||
-  null;
-
-const getRoleName = (value) =>
-  value?.role ||
-  value?.Role ||
-  value?.userType ||
-  value?.type ||
-  "";
 
 const getPackageTouristId = (pkg, centre, fallbackId) =>
   pkg?.touristId ||
@@ -104,19 +78,6 @@ export default function BookingSummaryPage() {
   const navigate = useNavigate();
   const { touristId, packageId } = useParams();
   const location = useLocation();
-  const dispatch = useDispatch();
-
-  const { loggedInUser, userToken, isAuthenticated } = useSelector(
-    (state) => state.auth,
-  );
-  const { 
-    bookingLoading, 
-    bookingError,
-    selectedPackage,
-    packagesLoading,
-    paymentPlans,
-    paymentPlanLoading
-  } = useSelector((state) => state.api);
 
   const [bookingData, setBookingData] = useState({
     packageDetails: location.state?.packageDetails || null,
@@ -129,22 +90,7 @@ export default function BookingSummaryPage() {
   const [packageData, setPackageData] = useState(null);
   const [ticketTypes, setTicketTypes] = useState([]);
   const minimumVisitDate = useMemo(() => getLocalDateInputValue(), []);
-  const authToken =
-    userToken ||
-    localStorage.getItem("userToken") ||
-    localStorage.getItem("token") ||
-    localStorage.getItem("vendorToken");
-  const tokenPayload = useMemo(() => decodeJwtPayload(authToken), [authToken]);
-  const authenticatedRole = (
-    getRoleName(loggedInUser) ||
-    getRoleName(tokenPayload)
-  ).toLowerCase();
-  const authenticatedClientId =
-    authenticatedRole === "vendor"
-      ? null
-      : getEntityId(loggedInUser) ||
-        localStorage.getItem("clientId") ||
-        getEntityId(tokenPayload);
+
   const bookingTouristId = getPackageTouristId(
     packageData || bookingData.packageDetails,
     bookingData.centreDetails,
@@ -155,66 +101,17 @@ export default function BookingSummaryPage() {
   console.log("📄 touristId:", touristId);
   console.log("📄 packageId:", packageId);
 
-  // ✅ Fetch package details and payment plans
+  // Use the package passed via navigation state, otherwise fall back to sample data
   useEffect(() => {
-    const fetchPackageData = async () => {
-      if (location.state?.packageDetails) {
-        const pkg = location.state.packageDetails;
-        setPackageData(pkg);
-        setBookingData(prev => ({
-          ...prev,
-          packageDetails: pkg,
-          centreDetails: location.state.centreDetails || prev.centreDetails,
-        }));
-        generateTicketTypes(pkg);
-        return;
-      }
-
-      if (packageId) {
-        try {
-          console.log("📦 Fetching package details for ID:", packageId);
-          
-          const packageResult = await dispatch(getPackageById(packageId)).unwrap();
-          console.log("📦 Package details fetched:", packageResult);
-          
-          const pkg = packageResult?.data || packageResult?.package || packageResult;
-          setPackageData(pkg);
-          setBookingData(prev => ({
-            ...prev,
-            packageDetails: pkg,
-            centreDetails: pkg?.touristCentre || pkg?.centre || prev.centreDetails,
-          }));
-
-          console.log("📋 Fetching payment plans for package:", packageId);
-          const plansResult = await dispatch(getPaymentPlans(packageId)).unwrap();
-          console.log("📋 Payment plans fetched:", plansResult);
-          
-          const plans = plansResult?.data || plansResult?.plans || plansResult || [];
-          generateTicketTypes(pkg, plans);
-          
-        } catch (error) {
-          console.error("❌ Failed to fetch package data:", error);
-          const savedData = localStorage.getItem("selectedPackage");
-          if (savedData) {
-            try {
-              const parsed = JSON.parse(savedData);
-              setPackageData(parsed);
-              setBookingData(prev => ({
-                ...prev,
-                packageDetails: parsed,
-              }));
-              generateTicketTypes(parsed);
-            } catch (e) {
-              console.error("Error parsing saved package:", e);
-            }
-          }
-        }
-      }
-    };
-
-    fetchPackageData();
-  }, [dispatch, packageId, location.state]);
-
+    const pkg = location.state?.packageDetails || SAMPLE_PACKAGE;
+    setPackageData(pkg);
+    setBookingData((prev) => ({
+      ...prev,
+      packageDetails: pkg,
+      centreDetails: location.state?.centreDetails || prev.centreDetails,
+    }));
+    generateTicketTypes(pkg);
+  }, [location.state]);
   const generateTicketTypes = (pkg, plans = []) => {
     console.log("🔄 Generating ticket types from:", { pkg, plans });
     
@@ -287,50 +184,6 @@ export default function BookingSummaryPage() {
 
   const displayTicketTypes = ticketTypes.length > 0 ? ticketTypes : fallbackTicketTypes;
 
-  // ✅ Check authentication on mount
-  useEffect(() => {
-    const token =
-      localStorage.getItem("token") || localStorage.getItem("userToken");
-    const isLoggedIn = !!token || isAuthenticated;
-
-    if (!isLoggedIn) {
-      console.log("🚫 User not authenticated - redirecting to signin");
-
-      const pendingData = {
-        touristId: bookingTouristId,
-        centreId: bookingTouristId,
-        clientId: authenticatedClientId,
-        packageId: packageId,
-        packageDetails: bookingData.packageDetails,
-        centreDetails: bookingData.centreDetails,
-        returnUrl: `/booking-summary/${bookingTouristId}/${packageId}`,
-      };
-      localStorage.setItem("pendingBooking", JSON.stringify(pendingData));
-
-      Swal.fire({
-        icon: "warning",
-        title: "Authentication Required",
-        text: "Please log in to complete your booking.",
-        confirmButtonColor: "#ff6b35",
-        confirmButtonText: "Go to Login",
-      }).then(() => {
-        navigate("/signin", {
-          state: {
-            from: `/booking-summary/${bookingTouristId}/${packageId}`,
-            bookingData: pendingData,
-          },
-        });
-      });
-    }
-  }, [
-    isAuthenticated,
-    navigate,
-    touristId,
-    packageId,
-    bookingData,
-    authenticatedClientId,
-    bookingTouristId,
-  ]);
 
   // ✅ Restore from localStorage if needed
   useEffect(() => {
@@ -383,40 +236,11 @@ export default function BookingSummaryPage() {
     [date, minimumVisitDate]
   );
   const canContinueToPayment =
-    !bookingLoading &&
     !isProcessing &&
     !visitDateError &&
     summaryItems.length > 0;
 
-  // ✅ Handle payment - FIXED: initializePayment now only sends bookingId
-  const handleContinueToPayment = async ({ isInstallment = false } = {}) => {
-    console.log("🚀 Starting payment process...");
-    
-    const token = localStorage.getItem("token") || localStorage.getItem("userToken");
-    if (!token) {
-      Swal.fire({
-        icon: "warning",
-        title: "Authentication Required",
-        text: "Please log in to complete your booking.",
-        confirmButtonColor: "#ff6b35",
-        confirmButtonText: "Go to Login",
-      }).then(() => {
-        navigate("/signin", {
-          state: {
-            from: `/booking-summary/${touristId}/${packageId}`,
-            bookingData: {
-              touristId: bookingTouristId,
-              centreId: bookingTouristId,
-              packageId: packageId,
-              packageDetails: bookingData.packageDetails,
-              centreDetails: bookingData.centreDetails,
-            },
-          },
-        });
-      });
-      return;
-    }
-
+  const handleContinueToPayment = ({ isInstallment = false } = {}) => {
     const currentVisitDateError = getVisitDateError(date, minimumVisitDate);
     if (currentVisitDateError) {
       Swal.fire({
@@ -440,282 +264,42 @@ export default function BookingSummaryPage() {
 
     setIsProcessing(true);
 
-    try {
-      const [year, month, day] = date.split("-");
-      const formattedDate = `${month}/${day}/${year}`;
-      const selectedTicketDetails = summaryItems.map((t) => ({
-        ticketType: t.id,
-        ticketLabel: t.label,
-        quantity: quantities[t.id] || 0,
-        price: t.price,
-        amount: t.price * (quantities[t.id] || 0),
-      }));
-      const numberOfPeople = selectedTicketDetails.reduce(
-        (sum, ticket) => sum + ticket.quantity,
-        0,
-      );
-
-      const bookingDataPayload = {
-        visitDate: formattedDate,
-        touristId: bookingTouristId,
-        centreId: bookingTouristId,
-        packageId,
-        amount: total,
-        totalAmount: total,
-        subtotal,
-        serviceFee: SERVICE_FEE,
-        ...(isInstallment && { paymentMethod: "installment" }),
-        numberOfPeople,
-        ticketDetails: selectedTicketDetails,
-      };
-
-      if (authenticatedRole === "vendor") {
-        Swal.fire({
-          icon: "warning",
-          title: "Client Account Required",
-          text: "Please log in with a client account to complete a booking.",
-          confirmButtonColor: "#ff6b35",
-        });
-        return;
-      }
-
-      if (!authenticatedClientId) {
-        Swal.fire({
-          icon: "warning",
-          title: "Authentication Required",
-          text: "Please log in again so we can confirm your client account.",
-          confirmButtonColor: "#ff6b35",
-          confirmButtonText: "Go to Login",
-        }).then(() => {
-          navigate("/signin", {
-            state: {
-              from: `/booking-summary/${touristId}/${packageId}`,
-              bookingData: {
-                touristId: bookingTouristId,
-                centreId: bookingTouristId,
-                packageId: packageId,
-                packageDetails: bookingData.packageDetails,
-                centreDetails: bookingData.centreDetails,
-              },
-            },
-          });
-        });
-        return;
-      }
-
-      const bookingResult = await dispatch(
-        createBooking({
-          clientId: authenticatedClientId,
-          centreId: bookingTouristId,
-          packageId: packageId,
-          bookingData: bookingDataPayload
-        })
-      ).unwrap();
-
-      const bookingId =
-        bookingResult?.data?.id ||
-        bookingResult?.booking?.id ||
-        bookingResult?.id;
-
-      if (!bookingId) {
-        throw new Error("Could not retrieve booking ID");
-      }
-
-      await Swal.fire({
-        icon: "success",
-        title: "🎉 Booking Created Successfully!",
-        text: "Your booking has been created. Now redirecting to payment...",
-        timer: 2000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-      });
-
-      localStorage.removeItem("pendingBooking");
-
-      // Save booking state before payment
-      const bookingState = {
-        bookingId: bookingId,
-        amount: total,
-        subtotal: subtotal,
-        serviceFee: SERVICE_FEE,
-        centreDetails: bookingData.centreDetails,
-        packageDetails: bookingData.packageDetails,
-        ticketDetails: selectedTicketDetails,
-        numberOfPeople,
-        date: formattedDate,
-        packageId: packageId,
-        touristId: bookingTouristId,
-        clientId: authenticatedClientId,
-        centreId: bookingTouristId,
-        isInstallment,
-      };
-      localStorage.setItem("pendingBookingState", JSON.stringify(bookingState));
-
-      if (isInstallment) {
-        navigate(`/payment-checkout/${bookingId}`, { state: bookingState });
-        return;
-      }
-
-      try {
-        // ✅ FIXED: Only pass bookingId — backend reads everything else from the booking record
-        const paymentResponse = await dispatch(
-          initializePayment({
-            bookingId,
-            paymentData: {
-              amount: total,
-              totalAmount: total,
-              subtotal,
-              serviceFee: SERVICE_FEE,
-              currency: "NGN",
-              callbackUrl: `${window.location.origin}/booking-confirmation/${bookingId}`,
-              metadata: {
-                bookingId,
-                packageId,
-                touristId: bookingTouristId,
-                clientId: authenticatedClientId,
-                ticketDetails: selectedTicketDetails,
-                numberOfPeople,
-              },
-            },
-          })
-        ).unwrap();
-
-        console.log("PAYMENT RESPONSE:", paymentResponse);
-        console.log("PAYMENT RESPONSE STRUCTURE:", JSON.stringify(paymentResponse, null, 2));
-
-        const paymentResult = paymentResponse?.data || paymentResponse;
-        const redirectUrl =
-          paymentResult?.data?.checkout_url ||
-          paymentResult?.checkout_url ||
-          paymentResult?.redirect_url ||
-          paymentResult?.authorization_url ||
-          paymentResult?.paymentUrl ||
-          paymentResponse?.redirect_url;
-
-        if (redirectUrl && redirectUrl.startsWith('http')) {
-          console.log("🔄 Redirecting to:", redirectUrl);
-          await Swal.fire({
-            icon: "info",
-            title: "Redirecting to Payment",
-            text: "You will be redirected to the payment gateway to complete your transaction.",
-            timer: 1500,
-            timerProgressBar: true,
-            showConfirmButton: false,
-          });
-          
-          window.location.href = redirectUrl;
-        } else {
-          console.warn("⚠️ No valid redirect URL found, falling back to checkout page");
-          console.log("Full payment response for debugging:", JSON.stringify(paymentResponse, null, 2));
-          
-          const result = await Swal.fire({
-            icon: "success",
-            title: "Booking Created Successfully!",
-            html: `
-              <p>Your booking has been created with ID: <strong>${bookingId}</strong></p>
-              <p>Total Amount: <strong>${formatNaira(total)}</strong></p>
-              <p style="margin-top: 15px; color: #666; font-size: 14px;">
-                Please complete your payment by clicking the button below.
-              </p>
-              <p style="margin-top: 15px;">
-                <button onclick="window.location.href='/payment-checkout/${bookingId}'" 
-                        style="background: #ff6b35; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
-                  Complete Payment
-                </button>
-              </p>
-            `,
-            confirmButtonColor: "#ff6b35",
-            confirmButtonText: "View My Bookings",
-          });
-          
-          if (result.isConfirmed) {
-            navigate("/my-bookings");
-          }
-        }
-      } catch (paymentError) {
-        console.error("❌ Payment initialization failed:", paymentError);
-        
-        const result = await Swal.fire({
-          icon: "warning",
-          title: "Booking Created but Payment Failed",
-          html: `
-            <p>Your booking was created successfully with ID: <strong>${bookingId}</strong></p>
-            <p>Total Amount: <strong>${formatNaira(total)}</strong></p>
-            <p style="margin-top: 15px; color: #666; font-size: 14px;">
-              ${paymentError?.message || "Please try to complete your payment later or contact support."}
-            </p>
-            <p style="margin-top: 15px;">
-              <button onclick="window.location.href='/payment-checkout/${bookingId}'" 
-                      style="background: #ff6b35; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
-                Retry Payment
-              </button>
-            </p>
-          `,
-          confirmButtonColor: "#ff6b35",
-          confirmButtonText: "Go to My Bookings",
-        });
-        
-        if (result.isConfirmed) {
-          navigate("/my-bookings");
-        }
-      }
-    } catch (error) {
-      console.error("❌ Error:", error);
-
-      let errorMessage = "Unable to process your booking. Please try again.";
-      const errorText = typeof error === "string" ? error : error?.message;
-
-      if (errorText === "Client not found") {
-        Swal.fire({
-          icon: "error",
-          title: "Session Expired",
-          text: "Please log in again to continue with your booking.",
-          confirmButtonColor: "#ff6b35",
-          confirmButtonText: "Go to Login",
-        }).then(() => {
-          navigate("/signin", {
-            state: {
-              from: `/booking-summary/${touristId}/${packageId}`,
-              bookingData: {
-                touristId: bookingTouristId,
-                centreId: bookingTouristId,
-                packageId: packageId,
-                packageDetails: bookingData.packageDetails,
-                centreDetails: bookingData.centreDetails,
-              },
-            },
-          });
-        });
-        return;
-      } else if (errorText) {
-        errorMessage = errorText;
-      }
-
-      Swal.fire({
-        icon: "error",
-        title: "Booking Failed",
-        text: errorMessage,
-        confirmButtonColor: "#ff6b35",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // ✅ Loading state
-  if (packagesLoading || paymentPlanLoading) {
-    return (
-      <div className="bp-page">
-        <div className="bp-header">
-          <h1 className="bp-title">Loading Package Details...</h1>
-        </div>
-        <div style={{ textAlign: "center", padding: "60px 20px" }}>
-          <div className="spinner"></div>
-          <p>Please wait...</p>
-        </div>
-      </div>
+    const [year, month, day] = date.split("-");
+    const formattedDate = `${month}/${day}/${year}`;
+    const selectedTicketDetails = summaryItems.map((t) => ({
+      ticketType: t.id,
+      ticketLabel: t.label,
+      quantity: quantities[t.id] || 0,
+      price: t.price,
+      amount: t.price * (quantities[t.id] || 0),
+    }));
+    const numberOfPeople = selectedTicketDetails.reduce(
+      (sum, ticket) => sum + ticket.quantity,
+      0,
     );
-  }
+
+    // UI-only build: no booking is created; use a local placeholder id
+    const bookingId = `BK-${Date.now()}`;
+
+    const bookingState = {
+      bookingId,
+      amount: total,
+      subtotal,
+      serviceFee: SERVICE_FEE,
+      centreDetails: bookingData.centreDetails,
+      packageDetails: bookingData.packageDetails,
+      ticketDetails: selectedTicketDetails,
+      numberOfPeople,
+      date: formattedDate,
+      packageId,
+      touristId: bookingTouristId,
+      centreId: bookingTouristId,
+      isInstallment,
+    };
+
+    setIsProcessing(false);
+    navigate(`/payment-checkout/${bookingId}`, { state: bookingState });
+  };
 
   if (!bookingData.packageDetails && !packageData) {
     return (
@@ -941,9 +525,7 @@ export default function BookingSummaryPage() {
             onClick={() => handleContinueToPayment()}
             disabled={!canContinueToPayment}
           >
-            {bookingLoading || isProcessing
-              ? "Processing..."
-              : "Continue To Payment"}
+            {isProcessing ? "Processing..." : "Continue To Payment"}
           </button>
 
           <button
@@ -955,14 +537,6 @@ export default function BookingSummaryPage() {
             or pay in installments
           </button>
 
-          {bookingError && (
-            <p
-              className="bp-error"
-              style={{ color: "red", textAlign: "center", marginTop: "12px" }}
-            >
-              {bookingError}
-            </p>
-          )}
         </div>
       </div>
     </div>

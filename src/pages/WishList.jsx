@@ -223,7 +223,7 @@ const WishList = () => {
               return (
                 <div className="attraction-card" key={item.id || item._id}>
                   <img 
-                    src="" 
+                    src={imageUrl} 
                     alt={item.centreName || item.name || "Attraction"} 
                     onClick={() => handleViewCentre(item)}
                     style={{ cursor: 'pointer' }}

@@ -1,31 +1,19 @@
 // Pages/Vendor/VendorVerifyOtp.jsx
 import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
+
 import Swal from "sweetalert2";
-import {
-  vendorVerifyOTP,
-  vendorVerifyOTPSuccess,
-  vendorVerifyOTPFail,
-  updateVendorToken,
-  setVendorDetails,
-} from "../redox/authSlice";
+
 import "../Styles/SignUpVendor.css";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "https://novaxcape.onrender.com/api/v1";
 
 const VendorVerifyOtp = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const location = useLocation();
-  const { loading: reduxLoading } = useSelector((state) => state.auth);
 
   const email = location.state?.email || "";
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [canResend, setCanResend] = useState(true);
 
@@ -53,7 +41,7 @@ const VendorVerifyOtp = () => {
     }
   };
 
-  const handleVerify = async () => {
+  const handleVerify = () => {
     const otpCode = otp.join("");
 
     if (otpCode.length !== 6) {
@@ -61,64 +49,20 @@ const VendorVerifyOtp = () => {
       return;
     }
 
-    if (!email) {
-      setError("Email address is missing");
-      return;
-    }
-
-    setLoading(true);
     setError("");
 
-    dispatch(vendorVerifyOTP());
+    // UI-only: no request is made; any complete code is accepted.
+    Swal.fire({
+      icon: "success",
+      title: "Verification Successful!",
+      text: "Your vendor account has been verified. You can now add your centre.",
+      confirmButtonColor: "#ff6b35",
+    });
 
-    try {
-      const response = await axios.post(`${API_BASE_URL}/vendor/verify-otp`, {
-        email: email,
-        otp: otpCode,
-      });
-
-      console.log("Verification response:", response.data);
-
-      dispatch(vendorVerifyOTPSuccess());
-
-      if (response.data.token) {
-        dispatch(updateVendorToken(response.data.token));
-        localStorage.setItem("vendorToken", response.data.token);
-      }
-      if (response.data.user) {
-        dispatch(setVendorDetails(response.data.user));
-        localStorage.setItem("vendorId", response.data.user.id || response.data.user._id);
-        localStorage.setItem("vendorEmail", response.data.user.email);
-      }
-
-      Swal.fire({
-        icon: "success",
-        title: "Verification Successful!",
-        text: "Your vendor account has been verified. You can now add your centre.",
-        confirmButtonColor: "#ff6b35",
-      });
-
-      navigate("/add-centre");
-    } catch (error) {
-      console.error("Verification error:", error.response?.data);
-      const errorMessage =
-        error.response?.data?.message || "Invalid OTP. Please try again.";
-
-      dispatch(vendorVerifyOTPFail(errorMessage));
-      setError(errorMessage);
-
-      Swal.fire({
-        icon: "error",
-        title: "Verification Failed",
-        text: errorMessage,
-        confirmButtonColor: "#ff6b35",
-      });
-    } finally {
-      setLoading(false);
-    }
+    navigate("/add-centre");
   };
 
-  const handleResendOTP = async () => {
+  const handleResendOTP = () => {
     if (!canResend) {
       Swal.fire({
         icon: "info",
@@ -129,57 +73,30 @@ const VendorVerifyOtp = () => {
       return;
     }
 
-    setLoading(true);
     setError("");
     setCanResend(false);
 
-    try {
-      const response = await axios.post(`${API_BASE_URL}/vendor/resend-otp`, {
-        email,
-      });
-      console.log("Resend response:", response.data);
+    // UI-only: no request is made.
+    Swal.fire({
+      icon: "success",
+      title: "OTP Resent!",
+      text: "A new verification code has been sent to your email.",
+      confirmButtonColor: "#ff6b35",
+    });
 
-      Swal.fire({
-        icon: "success",
-        title: "OTP Resent!",
-        text: "A new verification code has been sent to your email.",
-        confirmButtonColor: "#ff6b35",
-      });
+    setOtp(["", "", "", "", "", ""]);
+    document.getElementById("otp-0")?.focus();
 
-      setOtp(["", "", "", "", "", ""]);
-      document.getElementById("otp-0")?.focus();
-
-      // Re-enable resend after 5 minutes (300000 ms)
-      setTimeout(() => {
-        setCanResend(true);
-      }, 300000);
-    } catch (error) {
-      console.error("Resend error:", error.response?.data);
-      const errorMessage =
-        error.response?.data?.message || "Failed to resend OTP.";
-      setError(errorMessage);
+    // Re-enable resend after 5 minutes
+    setTimeout(() => {
       setCanResend(true);
-
-      Swal.fire({
-        icon: "error",
-        title: "Resend Failed",
-        text: errorMessage,
-        confirmButtonColor: "#ff6b35",
-      });
-    } finally {
-      setLoading(false);
-    }
+    }, 300000);
   };
-
-  if (!email) {
-    return null;
-  }
-
   return (
     <main className="signup_wrapper">
       <div className="signupBody">
         <div className="signupLeft">
-          <img src="" alt="Verification" />
+          <img src="/novaxcape/img.png" alt="Verification" />
         </div>
 
         <div className="signupRight">
@@ -217,7 +134,6 @@ const VendorVerifyOtp = () => {
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    disabled={loading || reduxLoading}
                     style={{
                       width: "50px",
                       height: "50px",
@@ -236,9 +152,9 @@ const VendorVerifyOtp = () => {
               type="button"
               className="signupBtn"
               onClick={handleVerify}
-              disabled={loading || otp.join("").length !== 6}
+              disabled={otp.join("").length !== 6}
             >
-              {loading ? "Verifying..." : "Verify Email"}
+              Verify Email
             </button>
 
             <div style={{ textAlign: "center", marginTop: "20px" }}>

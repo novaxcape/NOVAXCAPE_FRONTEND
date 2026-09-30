@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, Link, NavLink } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
 import "./css/Header.css";
 import {
   FiUser,
@@ -10,29 +9,18 @@ import {
   FiX,
   FiHeart,
 } from "react-icons/fi";
-import { logout } from "../redox/authSlice";
-import { logoutClient, logoutVendor } from "../redox/apiSlice";
 
 const Header = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const dropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
 
-  // Redux Persist authentication state
-  const isLoggedIn = useSelector(
-    (state) => state.auth.isAuthenticated
-  );
-  
-  const isVendor = useSelector(
-    (state) => state.auth.isVendor
-  );
-
+  // UI-only build: there is no auth. Flip this to true to preview the signed-in header.
+  const isLoggedIn = false;
   // Navigation Links
   const navLinks = [
     { name: "Home", to: "/", end: true },
@@ -91,40 +79,11 @@ const Header = () => {
       document.removeEventListener("mousedown", handleClickOutside);
   }, [mobileMenuOpen]);
 
-  const handleLogout = async () => {
-    // Prevent multiple logout clicks
-    if (isLoggingOut) return;
-    
-    setIsLoggingOut(true);
-
-    try {
-      // 1. Call the appropriate logout endpoint based on user type
-      if (isVendor) {
-        // Call vendor logout API
-        const result = await dispatch(logoutVendor()).unwrap();
-        console.log("✅ Vendor server logout successful:", result);
-      } else {
-        // Call client logout API
-        const result = await dispatch(logoutClient()).unwrap();
-        console.log("✅ Client server logout successful:", result);
-      }
-    } catch (error) {
-      // Even if the API call fails (e.g., token expired), proceed with local logout
-      console.warn("⚠️ Server logout failed, proceeding with local logout:", error);
-    }
-
-    // 2. Dispatch the local logout action (clears Redux state and localStorage)
-    dispatch(logout());
-
-    // 3. Close any open menus
+  const handleLogout = () => {
     setDropdownOpen(false);
     setMobileMenuOpen(false);
-    setIsLoggingOut(false);
-
-    // 4. Redirect to home
     navigate("/");
   };
-
   return (
     <>
       <header className="payment-navbar-header m-header">
@@ -134,7 +93,7 @@ const Header = () => {
           <div className="p-navbar-logo-wrapper m-logo">
             <Link to="/">
               <img
-                src=""
+                src="/novaxcape/logo.png"
                 alt="novaxcape"
                 className="p-navbar-brand-logo m-header-logo-img"
               />
@@ -220,10 +179,9 @@ const Header = () => {
                       <button
                         onClick={handleLogout}
                         className="p-dropdown-item"
-                        disabled={isLoggingOut}
-                      >
+                                              >
                         <FiLogOut size={16} />
-                        {isLoggingOut ? "Logging out..." : "Logout"}
+                        Logout
                       </button>
 
                     </div>
@@ -323,10 +281,9 @@ const Header = () => {
               <button
                 onClick={handleLogout}
                 className="m-mobile-logout-btn"
-                disabled={isLoggingOut}
-              >
+                              >
                 <FiLogOut size={18} />
-                {isLoggingOut ? "Logging out..." : "Logout"}
+                Logout
               </button>
             )}
           </div>

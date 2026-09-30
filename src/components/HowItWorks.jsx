@@ -26,7 +26,7 @@ const HowItWorks = () => {
 
       <div className="how__image-wrapper">
         <img
-          src=""
+          src="/novaxcape/how.png"
           alt="howitworks"
           className="how__image"
         />

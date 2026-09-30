@@ -3,46 +3,17 @@ import './css/PaymentCheckout.css';
 import { LuShield } from 'react-icons/lu';
 import { CiCalendar } from "react-icons/ci";
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import Swal from 'sweetalert2';
-import { initializePayment, getInstallmentPaymentStatus } from '../redox/apiSlice';
 
-const decodeJwtPayload = (token) => {
-  if (!token) return null;
-  try {
-    const payload = token.split(".")[1];
-    if (!payload) return null;
-    const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(normalizedPayload));
-  } catch (error) {
-    console.warn("Unable to decode auth token payload:", error);
-    return null;
-  }
-};
-
-const getEntityId = (value) =>
-  value?.id ||
-  value?._id ||
-  value?.clientId ||
-  value?.ClientId ||
-  value?.userId ||
-  value?.UserId ||
-  null;
 
 const PaymentCheckout = () => {
   const navigate = useNavigate();
   const params = useParams();
   const bookingId = params.bookingId || params.touristId;
   const location = useLocation();
-  const dispatch = useDispatch();
 
-  const [loading, setLoading] = useState(false);
-  const [paymentInitialized, setPaymentInitialized] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
-
-  const { loggedInUser, userToken } = useSelector((state) => state.auth);
-  const { paymentLoading, paymentError, paymentData } = useSelector((state) => state.api);
 
   const storedBookingState = (() => {
     try {
@@ -62,35 +33,11 @@ const PaymentCheckout = () => {
   const centreDetails = bookingData.centreDetails || {};
   const packageDetails = bookingData.packageDetails || {};
 
-  const authToken =
-    userToken ||
-    localStorage.getItem("userToken") ||
-    localStorage.getItem("token");
-  const tokenPayload = decodeJwtPayload(authToken);
-  const clientId =
-    getEntityId(loggedInUser) ||
-    bookingData.clientId ||
-    localStorage.getItem('clientId') ||
-    getEntityId(tokenPayload);
 
-  console.log("📄 PaymentCheckout - Mounted");
-  console.log("📄 bookingId:", bookingId);
-  console.log("📄 isInstallment:", isInstallment);
-  console.log("📄 totalAmount:", totalAmount);
-
-  // ✅ Fetch installment status if this is an installment booking
-  useEffect(() => {
-    if (bookingId && isInstallment) {
-      dispatch(getInstallmentPaymentStatus(bookingId));
-    }
-  }, [dispatch, bookingId, isInstallment]);
-
-  // Installment data from API: { data: { totalInstallments, amountPerInstallment, installmentsPaid, ... } }
-  const installmentStatus = isInstallment ? (paymentData || {}) : null;
-  const totalInstallments = installmentStatus?.totalInstallments || 2;
-  const amountPerInstallment = installmentStatus?.amountPerInstallment || Math.ceil(totalAmount / totalInstallments);
-  const installmentsPaid = installmentStatus?.installmentsPaid || 0;
-
+  // UI-only build: fixed sample installment schedule (2 payments)
+  const totalInstallments = 2;
+  const amountPerInstallment = Math.ceil(totalAmount / totalInstallments);
+  const installmentsPaid = 0;
   const plans = isInstallment ? [
     {
       id: `installment-${totalInstallments}`,
@@ -107,12 +54,6 @@ const PaymentCheckout = () => {
     }
   }, [isInstallment, plans.length]);
 
-  // ✅ Auto-initialize payment for non-installment bookings
-  useEffect(() => {
-    if (bookingId && !isInstallment && !paymentInitialized && !loading) {
-      handleContinueToPayment();
-    }
-  }, [bookingId, isInstallment]);
 
   const formatNaira = (amount) => {
     if (!amount) return '₦0';
@@ -125,9 +66,7 @@ const PaymentCheckout = () => {
     setSelectedPlan(plan);
   };
 
-  // ✅ FIXED: Only pass bookingId — no paymentData body
-  // ✅ FIXED: Correct redirect URL path — result.data.data.checkout_url
-  const handleContinueToPayment = async () => {
+  const handleContinueToPayment = () => {
     if (isInstallment && !selectedPlanId) {
       Swal.fire({
         icon: 'warning',
@@ -138,160 +77,23 @@ const PaymentCheckout = () => {
       return;
     }
 
-    if (!bookingId) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Booking Not Found',
-        text: 'Invalid booking. Please try again.',
-        confirmButtonColor: '#ff6b35',
-      });
-      return;
-    }
-
-    if (!authToken) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Login Required',
-        text: 'Please log in again to continue.',
-        confirmButtonColor: '#ff6b35',
-      });
-      navigate('/signin');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      console.log("💳 Initializing payment for bookingId:", bookingId);
-
-      // ✅ No body — backend reads everything from booking record
-      const result = await dispatch(initializePayment({ bookingId })).unwrap();
-
-      console.log("✅ Payment initialized:", result);
-      console.log("✅ Full response:", JSON.stringify(result, null, 2));
-
-      setPaymentInitialized(true);
-
-      // ✅ FIXED: API returns { message, data: { status, message, data: { reference, checkout_url } } }
-      const redirectUrl =
-        result?.data?.data?.checkout_url ||
-        result?.data?.data?.redirect_url ||
-        result?.data?.checkout_url ||
-        result?.data?.redirect_url ||
-        result?.data?.authorization_url ||
-        result?.checkout_url ||
-        result?.redirect_url;
-
-      const reference =
-        result?.data?.data?.reference ||
-        result?.data?.reference ||
-        result?.reference;
-
-      const status = result?.data?.status || result?.status;
-
-      console.log("🔗 redirectUrl:", redirectUrl);
-      console.log("🔗 reference:", reference);
-
-      if (redirectUrl && redirectUrl.startsWith('http')) {
-        console.log("🔄 Redirecting to Korapay:", redirectUrl);
-
-        await Swal.fire({
-          icon: 'success',
-          title: 'Redirecting to Payment Gateway',
-          text: 'You will be redirected to Korapay to complete your payment.',
-          timer: 1500,
-          timerProgressBar: true,
-          showConfirmButton: false,
-        });
-
-        window.location.href = redirectUrl;
-
-      } else if (reference) {
-        Swal.fire({
-          icon: 'info',
-          title: 'Payment Initiated',
-          html: `
-            <p>Your payment has been initiated.</p>
-            <p><strong>Reference:</strong> ${reference}</p>
-            <p><strong>Status:</strong> ${status || 'Pending'}</p>
-            <p>Please check your email for payment instructions.</p>
-          `,
-          confirmButtonColor: '#ff6b35',
-        }).then(() => {
-          navigate(`/booking-confirmation/${bookingId}`, {
-            state: { bookingId, amount: totalAmount, reference, centreDetails, packageDetails }
-          });
-        });
-
-      } else {
-        console.warn("⚠️ No redirect_url or reference in response:", JSON.stringify(result, null, 2));
-
-        Swal.fire({
-          icon: 'warning',
-          title: 'Unexpected Response',
-          text: 'Payment was processed but no redirect link was returned. Please contact support.',
-          confirmButtonColor: '#ff6b35',
-        }).then(() => {
-          navigate('/my-bookings');
-        });
-      }
-
-    } catch (error) {
-      console.error("❌ Payment error:", error);
-
-      let errorMessage = 'Unable to process payment. Please try again.';
-      if (typeof error === 'string') {
-        errorMessage = error;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-
-      Swal.fire({
-        icon: 'error',
-        title: 'Payment Error',
-        text: errorMessage,
-        confirmButtonColor: '#ff6b35',
-        confirmButtonText: 'Try Again',
-      });
-    } finally {
-      setLoading(false);
-    }
+    // UI-only build: no payment is processed; go straight to the confirmation screen
+    navigate(`/booking-confirmation/${bookingId}`, {
+      state: {
+        bookingId,
+        amount: totalAmount,
+        reference: `REF-${Date.now()}`,
+        centreDetails,
+        packageDetails,
+        booking: { ...bookingData, id: bookingId },
+      },
+    });
   };
-
   // Amount due today
   const amountDueToday = isInstallment && selectedPlan
     ? selectedPlan.installmentAmount
     : totalAmount;
 
-  // Loading / auto-initializing for non-installment
-  if ((loading || paymentLoading) && !isInstallment) {
-    return (
-      <div className="payment-page-wrapper">
-        <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-          <div className="spinner"></div>
-          <p style={{ marginTop: '16px', color: '#666' }}>Initializing payment...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state for non-installment
-  if (paymentError && !loading && !isInstallment) {
-    return (
-      <div className="payment-page-wrapper">
-        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <h2>Payment Error</h2>
-          <p style={{ color: 'red', margin: '16px 0' }}>{paymentError}</p>
-          <button className="checkout-submit-btn" onClick={handleContinueToPayment} style={{ marginBottom: '12px' }}>
-            Retry Payment
-          </button>
-          <button className="back-nav-btn" onClick={() => navigate(-1)}>
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="payment-page-wrapper">
@@ -320,11 +122,9 @@ const PaymentCheckout = () => {
             <h2 className="banner-title">Installment Payment</h2>
             <p className="banner-subtitle">Split payment into smaller amounts</p>
             <span className="banner-badge">Flexible Plan Available</span>
-            {installmentStatus && (
-              <span className="banner-badge">
-                {installmentsPaid} of {totalInstallments} paid
-              </span>
-            )}
+            <span className="banner-badge">
+              {installmentsPaid} of {totalInstallments} paid
+            </span>
           </div>
         </div>
       )}
@@ -446,17 +246,11 @@ const PaymentCheckout = () => {
           <button
             className="checkout-submit-btn"
             onClick={handleContinueToPayment}
-            disabled={loading || paymentLoading || (isInstallment && !selectedPlanId)}
+            disabled={isInstallment && !selectedPlanId}
           >
-            {loading || paymentLoading ? 'Processing...' :
-              isInstallment ? 'Continue To Payment' : 'Pay Now'}
+            {isInstallment ? 'Continue To Payment' : 'Pay Now'}
           </button>
 
-          {paymentError && (
-            <p style={{ color: 'red', textAlign: 'center', marginTop: '12px', fontSize: '14px' }}>
-              {paymentError}
-            </p>
-          )}
 
           <div className="security-notice-row">
             <LuShield className="security-shield-icon" />

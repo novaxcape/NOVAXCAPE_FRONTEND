@@ -8,7 +8,7 @@ const KycHeader = () => {
     <header className="kyc-navbar">
       <div className="navbar-container">
         <div className="navbar-logo">
-          <img src="" alt="Novaxcape Logo" className="logo-img" />
+          <img src="/novaxcape/logo.png" alt="Novaxcape Logo" className="logo-img" />
         </div>
         
         <nav className="navbar-links">

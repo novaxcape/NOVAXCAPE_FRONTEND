@@ -13,7 +13,7 @@ const StatCard = ({ title, value, percent, previous, type }) => {
       <div className="stat-header">
         <span className="stat-title">{title}</span>
         <img
-          src=""
+          src={icons[type]}
           alt={type}
           className="stat-icon-img"
         />

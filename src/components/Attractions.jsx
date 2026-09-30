@@ -97,7 +97,7 @@ const Attractions = () => {
                 </div>
               )}
               <img
-                src=""
+                src={attraction.image}
                 alt={attraction.alt}
                 className="cardDisplayImage"
               />

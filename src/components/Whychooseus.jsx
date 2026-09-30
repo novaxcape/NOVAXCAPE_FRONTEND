@@ -1,6 +1,6 @@
 import React from "react";
 import "../components/css/Chooseus.css";
-const chooseimage = "";
+import chooseimage from "/novaxcape/chooseimage.png";
 import { BsCheck2Circle } from "react-icons/bs";
 
 
@@ -16,7 +16,7 @@ const Whychooseus = () => {
           </div> */}
 
           <img
-            src=""
+            src={chooseimage}
             alt="Why Choose Us"
             className="whyChoose-image"
           /> 

@@ -1,10 +1,8 @@
-import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { LuBuilding2, LuCreditCard, LuUser } from "react-icons/lu";
 import { FiCheckCircle } from "react-icons/fi";
-import { createKyc } from "../redox/apiSlice";
 import "./css/KycForm.css";
 
 const initialFormData = {
@@ -29,48 +27,17 @@ const initialFormData = {
   bankCode: "",
 };
 
-const getEntityId = (value) =>
-  value?.id ||
-  value?._id ||
-  value?.touristId ||
-  value?.data?.id ||
-  value?.data?._id ||
-  value?.tourist?.id ||
-  value?.tourist?._id ||
-  value?.touristCenter?.id ||
-  value?.touristCenter?._id;
 
 const KycForm = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { kycLoading } = useSelector((state) => state.api);
   const [formData, setFormData] = useState(() => ({
     ...initialFormData,
     ...(location.state?.centreName ? { centreName: location.state.centreName } : {}),
   }));
 
-  const touristId =
-    location.state?.touristId ||
-    localStorage.getItem("latestTouristId") ||
-    localStorage.getItem("centreId") ||
-    localStorage.getItem("touristId") ||
-    getEntityId(location.state?.centreData) ||
-    null;
-
-  useEffect(() => {
-    if (!touristId) {
-      Swal.fire({
-        icon: "info",
-        title: "Add Your Centre First",
-        text: "Please add your tourism centre before completing KYC verification.",
-        confirmButtonColor: "#ff6b35",
-      }).then(() => {
-        navigate("/add-centre", { replace: true });
-      });
-    }
-  }, [navigate, touristId]);
-
+  // UI-only build: no centre lookup; the KYC form is always available
+  const touristId = location.state?.touristId || "sample-1";
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -128,20 +95,9 @@ const KycForm = () => {
     return "";
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!touristId) {
-      Swal.fire({
-        icon: "info",
-        title: "Add Your Centre First",
-        text: "Please add your tourism centre before completing KYC verification.",
-        confirmButtonColor: "#ff6b35",
-      }).then(() => {
-        navigate("/add-centre", { replace: true });
-      });
-      return;
-    }
 
     const validationError = validateForm();
     if (validationError) {
@@ -154,89 +110,18 @@ const KycForm = () => {
       return;
     }
 
-    // Send BOTH phoneNumber and centrePhoneNumber to satisfy backend
-    const kycData = {
-      lankmark: formData.lankmark,
-      CAC: formData.CAC,
-      yearEstablished: Number(formData.yearEstablished),
-      phoneNumber: String(formData.phoneNumber),
-      centrePhoneNumber: String(formData.phoneNumber), // Send same value as centrePhoneNumber
-      centreEmail: formData.centreEmail,
-      centreType: formData.centreType,
-      postal: formData.postal,
-      state: formData.state,
-      directorFullName: formData.directorFullName,
-      directorEmail: formData.directorEmail,
-      directorPhoneNumber: String(formData.directorPhoneNumber),
-      bankName: formData.bankName,
-      accountNumber: String(formData.accountNumber),
-      accountName: formData.accountName,
-      bankCode: formData.bankCode || "",
-    };
-
-    console.log("=== SENDING BOTH PHONE FIELDS ===");
-    console.log("Submitting KYC data:", JSON.stringify(kycData, null, 2));
-    console.log("Tourist ID:", touristId);
-    console.log("Has phoneNumber:", Object.hasOwn(kycData, "phoneNumber"));
-    console.log("Has centrePhoneNumber:", Object.hasOwn(kycData, "centrePhoneNumber"));
-
-    try {
-   await dispatch(
-  createKyc({ touristId, kycData })
-).unwrap();
-
-// Keep the centre id available for dashboard wallet/package/booking APIs.
-localStorage.setItem("latestTouristId", touristId);
-localStorage.setItem("centreId", touristId);
-localStorage.setItem("touristId", touristId);
-localStorage.setItem("selectedCentreId", touristId);
-
-// Mark onboarding as completed.
-localStorage.setItem("kycSubmitted", "true");
-localStorage.setItem("vendorHasCentre", "true");
-
-// If you want vendors to access the dashboard immediately,
-// temporarily mark packages as complete too.
-localStorage.setItem("vendorHasPackages", "true");
-
-Swal.fire({
-  icon: "success",
-  title: "KYC Submitted Successfully!",
-  text: "Your verification details have been submitted. You will be notified once verified.",
-  confirmButtonColor: "#ff6b35",
-  timer: 3000,
-  timerProgressBar: true,
-}).then(() => {
-  navigate("/vendor/dashboard");
-});
-    } catch (error) {
-      console.error("KYC submission error:", error);
-      console.error("Error response data:", error.response?.data);
-      console.error("Error response status:", error.response?.status);
-      
-      // Try to get the actual error message from backend
-      let errorMessage = "Unable to submit KYC. Please try again.";
-      if (error.response?.data) {
-        if (typeof error.response.data === 'string') {
-          errorMessage = error.response.data;
-        } else if (error.response.data.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.data.error) {
-          errorMessage = error.response.data.error;
-        } else {
-          errorMessage = JSON.stringify(error.response.data);
-        }
-      }
-      
-      Swal.fire({
-        icon: "error",
-        title: "KYC Submission Failed",
-        text: errorMessage,
-        confirmButtonColor: "#ff6b35",
-      });
-    }
+    // UI-only build: nothing is submitted.
+    Swal.fire({
+      icon: "success",
+      title: "KYC Submitted Successfully!",
+      text: "Your verification details have been submitted. You will be notified once verified.",
+      confirmButtonColor: "#ff6b35",
+      timer: 3000,
+      timerProgressBar: true,
+    }).then(() => {
+      navigate("/vendor/dashboard");
+    });
   };
-
   return (
     <main className="kyc-page-wrapper">
       <div className="back-button-row">
@@ -535,12 +420,8 @@ Swal.fire({
               <button
                 type="submit"
                 className="kyc-submit-btn"
-                disabled={kycLoading}
-                style={{ opacity: kycLoading ? 0.7 : 1 }}
               >
-                {kycLoading
-                  ? "Submitting..."
-                  : "Submit for Verification"}
+                Submit for Verification
                 <FiCheckCircle className="btn-success-check-icon" />
               </button>
             </div>
